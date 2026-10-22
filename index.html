@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modulo Completo - Tesla Evento</title>
+  <title>Registrazione Raduno Tesla</title>
   <style>
-    /* Stili generali e reset basati sul look pulito dell'immagine */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8f9fa;
+      background-color: #f4f4f7;
+      color: #333;
       margin: 0;
       padding: 20px;
       display: flex;
@@ -16,281 +16,337 @@
       align-items: center;
       min-height: 100vh;
     }
-
     .form-container {
-      background-color: #ffffff;
+      background: white;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       width: 100%;
-      max-width: 450px;
+      max-width: 600px;
+      box-sizing: border-box;
     }
-
-    .form-group {
+    .header-evento {
+      text-align: center;
       margin-bottom: 20px;
-      position: relative;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
     }
-
+    .header-evento h1 {
+      font-size: 28px;
+      margin: 0;
+      letter-spacing: 2px;
+    }
+    .header-evento h2 {
+      font-size: 32px;
+      color: #cc0000;
+      margin: 5px 0;
+    }
+    .header-evento p {
+      margin: 5px 0;
+      font-size: 15px;
+    }
+    .sezione-titolo {
+      background-color: #eaeaea;
+      text-align: center;
+      padding: 8px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
     label {
       display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: #333333;
       margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
     }
-
-    /* Struttura dei campi di input arrotondati ricalcata dallo screenshot */
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .input-field {
+    input[type="text"], input[type="email"], input[type="number"] {
       width: 100%;
-      padding: 12px 40px 12px 16px;
-      font-size: 16px;
-      color: #212529;
-      background-color: #ffffff;
-      border: 1.5px solid #dcdcdc;
-      border-radius: 10px;
-      outline: none;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-size: 15px;
+      background-color: #fff;
     }
-
-    .input-field:focus {
-      border-color: #0066cc;
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    input:focus {
+      outline: none;
+      border-color: #cc0000;
     }
-
-    /* Icone posizionate sulla destra dell'input */
-    .field-icon {
-      position: absolute;
-      right: 14px;
-      width: 18px;
-      height: 18px;
-      color: #666666;
-      pointer-events: none;
+    input[readonly] {
+      background-color: #f0f0f0;
+      color: #333;
+      cursor: not-allowed;
+      font-weight: bold;
     }
-
-    /* Stili specifici per il box dei suggerimenti della città (Autocomplete) */
-    .autocomplete {
-      position: relative;
-    }
-
-    .suggestions-box {
+    .suggestions-list {
       position: absolute;
       top: 100%;
       left: 0;
       right: 0;
-      background: white;
-      border: 1.5px solid #dcdcdc;
-      border-top: none;
-      border-radius: 0 0 10px 10px;
-      max-height: 200px;
+      background-color: #ffffff !important;
+      border: 1px solid #ccc;
+      border-radius: 0 0 6px 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 180px;
       overflow-y: auto;
-      z-index: 1000;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 9999;
       display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-
-    .suggestions-box div {
-      padding: 10px 16px;
+    .suggestions-list li {
+      padding: 12px;
       cursor: pointer;
       font-size: 14px;
       color: #333;
+      background-color: #ffffff;
+      border-bottom: 1px solid #f0f0f0;
     }
-
-    .suggestions-box div:hover {
-      background-color: #f1f3f5;
+    .suggestions-list li:hover {
+      background-color: #f5f5f5 !important;
     }
-
-    /* Classi di utilità per la gestione delle pagine */
-    .hidden {
-      display: none !important;
-    }
-    
-    .nav-btn {
-      background-color: #0066cc;
+    .btn-secondario {
+      width: 100%;
+      padding: 12px;
+      background-color: #555;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
       cursor: pointer;
-      font-weight: 600;
-      margin-top: 10px;
+      margin-top: 8px;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    .btn-secondario:hover {
+      background-color: #333;
+    }
+    .btn-invia {
+      width: 100%;
+      padding: 15px;
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 25px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+    .btn-invia:hover {
+      background-color: #a30000;
     }
   </style>
 </head>
 <body>
 
-<!-- Contenitore Principale -->
 <div class="form-container">
 
-  <!-- Pagine segnaposto basate sulla tua logica showPage() -->
-  <div id="pageHome" class="hidden">
-    <h2>Home Page</h2>
-    <button class="nav-btn" onclick="showPage('form')">Vai al Modulo</button>
+  <div class="header-evento">
+    <h1>RADUNO</h1>
+    <h2>TESLA</h2>
+    <p><strong>SABATO 24 OTTOBRE 2026</strong></p>
+    <p><em>Dalle 15:00 Fino Al Tramonto</em></p>
+    <p style="margin-top: 10px; font-size: 13px; color: #555;">CAMPO VOLO LEONARDO DA VINCI<br>STRADA SCOGLIO 27029 VIGEVANO (PV)</p>
   </div>
 
-  <div id="pageList" class="hidden">
-    <h2>Lista Elementi</h2>
-    <button class="nav-btn" onclick="showPage('form')">Torna al Modulo</button>
-  </div>
+  <div class="sezione-titolo">Modulo di Registrazione</div>
 
-  <div id="pageMap" class="hidden">
-    <h2>Mappa</h2>
-    <button class="nav-btn" onclick="showPage('form')">Torna al Modulo</button>
-  </div>
+  <form id="modulo-raduno">
 
-  <!-- PAGINA DEL MODULO (Attiva di default per il test) -->
-  <div id="pageForm">
-    
-    <!-- Campo Autocomplete: Città di Partenza -->
-    <div class="form-group autocomplete">
-      <label for="citta-input">Città di Partenza</label>
-      <div class="input-wrapper">
-        <input 
-          type="text" 
-          id="citta-input" 
-          class="input-field" 
-          placeholder="Cerca una città in Italia..." 
-          autocomplete="off"
-        >
-        <!-- Icona della mappa/posizione -->
-        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-      </div>
-      <!-- Box dei suggerimenti popolato via JS -->
-      <div id="suggBox" class="suggestions-box"></div>
+    <div class="form-group">
+      <label for="nome">NOME:</label>
+      <input type="text" id="nome" name="nome" placeholder="Inserisci il tuo nome" required>
+    </div>
+
+    <div class="form-group">
+      <label for="cognome">COGNOME:</label>
+      <input type="text" id="cognome" name="cognome" placeholder="Inserisci il tuo cognome" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">MAIL (Obbligatoria con carattere @):</label>
+      <input type="email" id="email" name="email" placeholder="esempio@email.com" required>
+    </div>
+
+    <div class="form-group">
+      <label for="targa">TARGA - SOLO I TRE NUMERI CENTRALI:</label>
+      <input type="text" id="targa" name="targa" placeholder="123" minlength="3" maxlength="3" pattern="\d{3}" required title="Inserisci esattamente 3 numeri da 000 a 999">
+    </div>
+
+    <!-- Modificato: Campo unico con maschera anziché tre select -->
+    <div class="form-group">
+      <label for="data-nascita">DATA DI NASCITA:</label>
+      <input type="text" id="data-nascita" name="data_nascita" placeholder="gg/mm/aaaa" maxlength="10" required>
+    </div>
+
+    <div class="form-group">
+      <label for="km_tesla">QUANTI KM HA LA TUA TESLA?</label>
+      <input type="number" id="km_tesla" name="km_tesla" placeholder="Es. 45000" min="0" required>
+    </div>
+
+    <div class="form-group">
+      <label for="citta">CITTA' DI PROVENIENZA (SOLO CITTA', NON INDIRIZZO):</label>
+      <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la città..." autocomplete="off" required>
+      <ul id="suggerimenti-citta" class="suggestions-list"></ul>
+      <button type="button" id="btn-calcola" class="btn-secondario">CALCOLA km percorsi</button>
       
-      <!-- Campi nascosti per memorizzare le coordinate geografiche della città -->
+      <!-- Coordinate nascoste per il calcolo -->
       <input type="hidden" id="cittaLat">
       <input type="hidden" id="cittaLon">
     </div>
 
-    <!-- Campo Data 1: Data di Nascita (gg/mm/aaaa) -->
     <div class="form-group">
-      <label for="data-nascita">Data di Nascita</label>
-      <div class="input-wrapper">
-        <input 
-          type="text" 
-          id="data-nascita" 
-          class="input-field" 
-          placeholder="gg/mm/aaaa" 
-          maxlength="10"
-          autocomplete="off"
-        >
-        <!-- Icona Calendario Minimal -->
-        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      </div>
+      <label for="distanza">PER IL TUO VIAGGIO FINO A QUI (strada scoglio 27029 vigevano (Pavia)) HAI FATTO KM:</label>
+      <input type="text" id="distanza" name="distanza" readonly placeholder="Clicca su 'CALCOLA km percorsi'" required>
     </div>
 
-    <!-- Campo Data 2: Mese-Anno della Macchina (mm/aaaa) -->
     <div class="form-group">
-      <label for="data-macchina">Mese-Anno Macchina</label>
-      <div class="input-wrapper">
-        <input 
-          type="text" 
-          id="data-macchina" 
-          class="input-field" 
-          placeholder="mm/aaaa" 
-          maxlength="7"
-          autocomplete="off"
-        >
-        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      </div>
+      <label for="modello">INDICA IL MODELLO DELLA TUA TESLA:</label>
+      <input type="text" id="modello" name="modello" placeholder="Es. Model 3 Long Range" required>
     </div>
 
-  </div>
+    <!-- Modificato: Campo unico con maschera anziché due select -->
+    <div class="form-group">
+      <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
+      <input type="text" id="data-macchina" name="data_macchina" placeholder="mm/aaaa" maxlength="7" required>
+    </div>
+
+    <button type="submit" class="btn-invia">CONFERMA E INVIA</button>
+  </form>
 </div>
 
 <script>
-// --- DICHIARAZIONE VARIABILI E ELEMENTI DOM ---
-const input = document.getElementById('citta-input');
-const suggBox = document.getElementById('suggBox');
+  // Coordinate precise del raduno a Vigevano
+  const LAT_RADUNO = 45.3045; 
+  const LON_RADUNO = 8.8702;
+  const KEY = 'tesla_evento_dati';
 
-const pageHome = document.getElementById('pageHome');
-const pageForm = document.getElementById('pageForm');
-const pageList = document.getElementById('pageList');
-const pageMap = document.getElementById('pageMap');
+  document.addEventListener("DOMContentLoaded", function() {
+    
+    // --- 1. GESTIONE DELLE MASCHERE DI INPUT DELLE DATE ---
+    
+    // Maschera Data di Nascita (gg/mm/aaaa)
+    document.getElementById('data-nascita').addEventListener('input', function (e) {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 8) v = v.slice(0, 8); 
+      if (v.length >= 5) {
+        e.target.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+      } else if (v.length >= 3) {
+        e.target.value = v.slice(0, 2) + '/' + v.slice(2);
+      } else {
+        e.target.value = v;
+      }
+    });
 
-// --- LOGICA DEL COSTRUTTO INTEGRATO (Città e Autocomplete) ---
-let timeoutCerca = null;
-input.addEventListener('input', () => {
-  clearTimeout(timeoutCerca);
-  const q = input.value.trim();
-  if (q.length < 3) {
-    suggBox.style.display = 'none';
-    return;
-  }
-  // Debounce di 300ms per evitare chiamate API continue a ogni singola lettera digitata
-  timeoutCerca = setTimeout(() => cercaCitta(q), 300);
-});
+    // Maschera Data Macchina (mm/aaaa)
+    document.getElementById('data-macchina').addEventListener('input', function (e) {
+      let v = e.target.value.replace(/\D/g, ''); 
+      if (v.length > 6) v = v.slice(0, 6); 
+      if (v.length >= 3) {
+        e.target.value = v.slice(0, 2) + '/' + v.slice(2);
+      } else {
+        e.target.value = v;
+      }
+    });
 
-async function cercaCitta(q){
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
-    const data = await res.json(); suggBox.innerHTML='';
-    data.forEach(p=>{
-      const div = document.createElement('div'); div.textContent = p.display_name;
-      div.onclick = () => {
-        input.value = p.display_name.split(',').slice(0,2).join(',').trim();
-        document.getElementById('cittaLat').value = p.lat; document.getElementById('cittaLon').value = p.lon;
+
+    // --- 2. LOGICA RICERCA CITTA' (AUTOCOMPLETE) ---
+    const inputCitta = document.getElementById('citta');
+    const suggBox = document.getElementById('suggerimenti-citta');
+    let timeoutCerca = null;
+
+    inputCitta.addEventListener('input', () => {
+      clearTimeout(timeoutCerca);
+      const q = inputCitta.value.trim();
+      if (q.length < 3) {
         suggBox.style.display = 'none';
-      }; suggBox.appendChild(div);
-    }); suggBox.style.display = data.length ? 'block' : 'none';
-  }catch(e){}
-}
+        return;
+      }
+      timeoutCerca = setTimeout(() => cercaCitta(q), 300);
+    });
 
-// Chiusura del box suggerimenti cliccando fuori
-document.addEventListener('click',(e)=>{ if(!e.target.closest('.autocomplete')) suggBox.style.display='none'; });
+    async function cercaCitta(q){
+      try{
+        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
+        const data = await res.json(); 
+        suggBox.innerHTML = '';
+        
+        data.forEach(p => {
+          const li = document.createElement('li'); 
+          li.textContent = p.display_name;
+          li.onclick = () => {
+            inputCitta.value = p.display_name.split(',').slice(0,2).join(',').trim();
+            document.getElementById('cittaLat').value = p.lat; 
+            document.getElementById('cittaLon').value = p.lon;
+            suggBox.style.display = 'none';
+          }; 
+          suggBox.appendChild(li);
+        }); 
+        suggBox.style.display = data.length ? 'block' : 'none';
+      } catch(e) {}
+    }
+
+    // Chiude i suggerimenti se si clicca fuori dal campo città
+    document.addEventListener('click', (e) => { 
+      if(!e.target.closest('.form-group')) suggBox.style.display = 'none'; 
+    });
 
 
-// --- LOGICA GESTIONE DATI LOCALI (Local Storage) ---
-const KEY = 'tesla_evento_dati';
-function getDati(){return JSON.parse(localStorage.getItem(KEY)||'[]')}
-function setDati(d){localStorage.setItem(KEY,JSON.stringify(d))}
+    // --- 3. CALCOLO DISTANZA CHILOMETRICA (FORMULA HAVERSINE) ---
+    document.getElementById('btn-calcola').addEventListener('click', function() {
+      const lat = parseFloat(document.getElementById('cittaLat').value);
+      const lon = parseFloat(document.getElementById('cittaLon').value);
+      
+      if (!lat || !lon) {
+        alert("Per favore, seleziona prima una città valida dall'elenco dei suggerimenti.");
+        return;
+      }
 
-
-// --- LOGICA GESTIONE PAGINE ---
-function showPage(p){
-  pageHome.classList.add('hidden'); pageForm.classList.add('hidden'); pageList.classList.add('hidden'); pageMap.classList.add('hidden');
-  if(p=='home') pageHome.classList.remove('hidden');
-  if(p=='form') pageForm.classList.remove('hidden');
-  if(p=='list'){pageList.classList.remove('hidden'); /* renderList() */} // scommenta se hai la funzione renderList
-  if(p=='map'){pageMap.classList.remove('hidden'); /* scommenta se usi Leaflet: setTimeout(()=>{initMap(); if(map) map.invalidateSize();},300) */ }
-}
-
-
-// --- MASCHERE DI INSERIMENTO AUTOMATICO DELLE DATE (Opzione 2) ---
-
-// Gestione Maschera Data di Nascita (gg/mm/aaaa)
-document.getElementById('data-nascita').addEventListener('input', function (e) {
-  let v = e.target.value.replace(/\D/g, ''); // Tiene solo i numeri
-  if (v.length > 8) v = v.slice(0, 8); 
-  
-  if (v.length >= 5) {
-    e.target.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-  } else if (v.length >= 3) {
-    e.target.value = v.slice(0, 2) + '/' + v.slice(2);
-  } else {
-    e.target.value = v;
-  }
+      // Raggio della terra in km
+      const R = 6371; 
+      const dLat = (lat - LAT_RADUNO) * Math.PI / 180;
+const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+Math.cos(LAT_RADUNO * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+Math.sin(dLon/2) * Math.sin(dLon/2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+const distanzaKm = Math.round(R * c); // Arrotonda al chilometro più vicino
+document.getElementById('distanza').value = distanzaKm + " KM";
 });
-
-// Gestione Maschera Mese-Anno Macchina (mm/aaaa)
-document.getElementById('data-macchina').addEventListener('input', function (e) {
-  let v = e.target.value.replace(/\D/g, ''); 
-  if (v.length > 6) v = v.slice(0, 6); 
-  
-  if (v.length >= 3) {
-    e.target.value = v.slice(0, 2) + '/' + v.slice(2);
-  } else {
-    e.target.value = v;
-  }
+// --- 4. GESTIONE SALVATAGGIO DATI (LOCALSTORAGE) ---
+function getDati(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+function setDati(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+document.getElementById('modulo-raduno').addEventListener('submit', function(e) {
+e.preventDefault();
+const nuovaRegistrazione = {
+nome: document.getElementById('nome').value,
+cognome: document.getElementById('cognome').value,
+email: document.getElementById('email').value,
+targa: document.getElementById('targa').value,
+data_nascita: document.getElementById('data-nascita').value,
+km_tesla: document.getElementById('km_tesla').value,
+citta: inputCitta.value,
+distanza_raduno: document.getElementById('distanza').value,
+modello: document.getElementById('modello').value,
+data_tesla: document.getElementById('data-macchina').value,
+timestamp: new Date().toISOString()
+};
+const datiAttuali = getDati();
+datiAttuali.push(nuovaRegistrazione);
+setDati(datiAttuali);
+alert("Registrazione completata e salvata con successo!");
+this.reset();
+document.getElementById('distanza').value = '';
 });
-</script>
-
-</body>
-</html>
+});
