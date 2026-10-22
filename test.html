@@ -3,23 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Integrazione Tesla</title>
+    <title>Mappa e Percorso Raduno Tesla</title>
     
-    <!-- Librerie per la Mappa e lo Stile Grafico (Infallibili) -->
+    <!-- 1. CARICAMENTO DELLE LIBRERIE MAPPA (CORRETTE E COMPLETE) -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <script src="https://unpkg.com"></script>
+
+    <!-- 2. CARICAMENTO DEL MOTORE DI PERCORSI STRADALI -->
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; max-width: 450px; margin: 20px auto; padding: 15px; }
-        h2 { color: #cc0000; text-align: center; }
-        .form-group { position: relative; margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; border: 1px solid #ccc; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f9f9f9;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+        h1 { color: #cc0000; }
+        .form-group { position: relative; margin-bottom: 15px; text-align: left; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
         
-        /* Contenitore per i suggerimenti delle città */
+        /* Pannello dei suggerimenti delle città */
         #suggerimenti-citta {
             position: absolute;
-            border: 1px solid #d4d4d4;
+            border: 1px solid #ccc;
             background-color: #ffffff;
             z-index: 9999;
             top: 100%;
@@ -27,92 +38,105 @@
             right: 0;
             max-height: 200px;
             overflow-y: auto;
-            box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
             display: none;
         }
         
-        button { background-color: #cc0000; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 10px; font-size: 16px; }
+        button { background-color: #cc0000; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; }
         button:hover { background-color: #990000; }
-        
-        /* Riquadro Mappa */
-        #contenitore-mappa { 
-            height: 300px; 
-            width: 100%; 
-            margin-top: 20px; 
-            border: 2px solid #cc0000; 
-            background-color: #eee; 
+
+        /* Riquadro della mappa */
+        #map-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 2px solid #cc0000;
+            background-color: #eee;
         }
     </style>
 </head>
 <body>
 
-    <h2>🚗 Test Modulo Tesla</h2>
-    
+    <h1>🚗 Calcolo Itinerario Tesla</h1>
+    <p>Scegli la città per vedere il percorso stradale reale fino al raduno.</p>
+
     <div class="form-group">
         <label>CITTÀ DI PROVENIENZA:</label>
-        <!-- Casella di testo usando l'ID "citta" dal tuo codice originale -->
-        <input type="text" id="citta" placeholder="Inizia a scrivere la città..." autocomplete="off">
-        <!-- Il riquadro dei suggerimenti dal tuo codice originale -->
+        <input type="text" id="citta" placeholder="Inizia a scrivere (es. Monguzzo, Milano...)" autocomplete="off">
         <div id="suggerimenti-citta"></div>
     </div>
 
-    <button type="button" id="btn-calcola">CALCOLA km percorsi</button>
+    <button type="button" id="btn-calcola">CALCOLA PERCORSO E KM</button>
 
     <div class="form-group" style="margin-top: 15px;">
-        <label>KM PERCORSI FINO A VIGEVANO:</label>
-        <input type="text" id="km_fatti" readonly placeholder="I KM appariranno qui...">
+        <label>KM REALI SU STRADA:</label>
+        <input type="text" id="km_fatti" readonly placeholder="I chilometri stradali appariranno qui...">
     </div>
 
-    <!-- Campi nascosti per salvare latitudine e longitudine della partenza -->
+    <!-- Campi nascosti per memorizzare le coordinate di partenza -->
     <input type="hidden" id="cittaLat">
     <input type="hidden" id="cittaLon">
 
-    <!-- Il quadrato della mappa stradale -->
-    <div id="contenitore-mappa"></div>
+    <!-- La Mappa -->
+    <div id="map-container"></div>
 
     <script>
-        // ========================================================
-        // CONFIGURAZIONE PUNTO DI ARRIVO (VIGEVANO) E MAPPA
-        // ========================================================
+        // Coordinate fisse del Raduno (Campo Volo, Vigevano)
         const latVigevano = 45.2974;
         const lonVigevano = 8.8952;
 
-        // Inizializza la mappa centrata sul raduno
-        const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
+        // 3. INIZIALIZZA LA MAPPA CENTRATA SU VIGEVANO
+        const map = L.map('map-container').setView([latVigevano, lonVigevano], 10);
 
-        // Carica la grafica stradale standard
+        // 4. AGGIUNGI LA GRAFICA STRADALE DI OPENSTREETMAP
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Mette il segnaposto fisso su Vigevano
-        L.marker([latVigevano, lonVigevano]).addTo(map)
-            .bindPopup('<b>Raduno Tesla 2026</b><br>Vigevano')
+        // Aggiunge un marker sul punto di arrivo fisso
+        const markerArrivo = L.marker([latVigevano, lonVigevano]).addTo(map)
+            .bindPopup("<b>Traguardo Raduno Tesla</b><br>Vigevano")
             .openPopup();
 
-        // Forza la mappa a disegnarsi correttamente senza blocchi grigi
-        setTimeout(() => { map.invalidateSize(); }, 600);
+        // 5. CONFIGURA IL MOTORE DI RICERCA PERCORSI (Inizialmente vuoto)
+        const routingControl = L.Routing.control({
+            waypoints: [],
+            language: 'it',
+            createMarker: function() { return null; }, // Evita marker doppi brutti sulla mappa
+            lineOptions: {
+                styles: [{ color: '#cc0000', weight: 5 }] // Disegna la linea stradale in rosso Tesla
+            },
+            show: false // Nasconde il pannello di testo con le svolte a destra/sinistra per pulizia
+        }).addTo(map);
+
+        // Quando il motore trova la strada, legge i KM e li mette nella casella di testo
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            const kmStradali = Math.round(summary.totalDistance / 1000);
+            document.getElementById('km_fatti').value = kmStradali;
+        });
 
 
         // ========================================================
-        // BLOCCO 2: LOGICA AUTOCOMPLETE (IL TUO CODICE GIALLO CORRETTO)
+        // 6. LOGICA AUTOCOMPLETE (IL TUO CODICE DEL COMUNE)
         // ========================================================
         let debounce;
         const inputCitta = document.getElementById('citta');
         const suggBox = document.getElementById('suggerimenti-citta');
 
-        if (inputCitta && suggBox) {
-            inputCitta.addEventListener('input', () => {
-                clearTimeout(debounce);
-                const q = inputCitta.value.trim();
-                if (q.length < 2) {
-                    suggBox.innerHTML = '';
-                    suggBox.style.display = 'none';
-                    return;
-                }
-                debounce = setTimeout(() => cercaCitta(q), 350);
-            });
-        }
+        inputCitta.addEventListener('input', () => {
+            clearTimeout(debounce);
+            const q = inputCitta.value.trim();
+            if (q.length < 2) {
+                suggBox.innerHTML = '';
+                suggBox.style.display = 'none';
+                return;
+            }
+            debounce = setTimeout(() => cercaCitta(q), 350);
+        });
 
         async function cercaCitta(q) {
             try {
@@ -123,43 +147,36 @@
                 if (data && data.length > 0) {
                     suggBox.style.display = 'block';
                     data.forEach(p => {
-                        const li = document.createElement('div');
+                        const divCitta = document.createElement('div');
                         
-                        // Stile per rendere visibili e cliccabili i suggerimenti
-                        li.style.padding = '12px';
-                        li.style.cursor = 'pointer';
-                        li.style.color = '#333333';
-                        li.style.backgroundColor = '#ffffff';
-                        li.style.borderBottom = '1px solid #f0f0f0';
+                        divCitta.style.padding = '12px';
+                        divCitta.style.cursor = 'pointer';
+                        divCitta.style.color = '#333333';
+                        divCitta.style.borderBottom = '1px solid #f0f0f0';
+                        divCitta.style.backgroundColor = '#ffffff';
 
                         const nomePulito = p.display_name.split(',').slice(0,3).join(',').trim();
-                        li.textContent = nomePulito;
+                        divCitta.textContent = nomePulito;
 
-                        li.onclick = () => {
+                        divCitta.onclick = () => {
                             inputCitta.value = nomePulito;
-
-                            // Salva le coordinate nei campi nascosti
-                            const elLat = document.getElementById('cittaLat');
-                            const elLon = document.getElementById('cittaLon');
-                            
-                            if (elLat) elLat.value = p.lat;
-                            if (elLon) elLon.value = p.lon;
-
+                            document.getElementById('cittaLat').value = p.lat;
+                            document.getElementById('cittaLon').value = p.lon;
                             suggBox.innerHTML = '';
                             suggBox.style.display = 'none';
                         };
                         
-                        suggBox.appendChild(li);
+                        suggBox.appendChild(divCitta);
                     });
                 } else {
                     suggBox.style.display = 'none';
                 }
             } catch (err) {
-                console.error("Errore autocomplete:", err);
+                console.error(err);
             }
         }
 
-        // Chiude la tendina se si clicca fuori dalla casella
+        // Chiude la tendina se si clicca altrove nella pagina
         document.addEventListener('click', function(e) {
             if (e.target !== inputCitta) {
                 suggBox.style.display = 'none';
@@ -168,37 +185,22 @@
 
 
         // ========================================================
-        // BLOCCO 3: CALCOLO STRADALE KM (OSRM API)
+        // 7. ATTIVAZIONE DEL PERCORSO AL CLICK SUL BOTTONE
         // ========================================================
         document.getElementById('btn-calcola').addEventListener('click', function() {
             const latP = document.getElementById('cittaLat').value;
             const lonP = document.getElementById('cittaLon').value;
 
             if (!latP || !lonP) {
-                alert("Per favore, digita la tua città e selezionala dall'elenco che appare!");
+                alert("Per favore, digita la città e selezionala dal menu a tendina!");
                 return;
             }
 
-            // Muove la mappa per mostrare la città di partenza dell'utente
-            map.setView([parseFloat(latP), parseFloat(lonP)], 8);
-            L.marker([parseFloat(latP), parseFloat(lonP)]).addTo(map).bindPopup('La tua partenza').openPopup();
-
-            // Calcola il percorso sulle strade reali
-            fetch(`https://project-osrm.org{lonP},${latP};${lonVigevano},${latVigevano}?overview=false`)
-                .then(res => res.json())
-                .then(routing => {
-                    if (!routing || !routing.routes || routing.routes.length === 0) {
-                        alert("Impossibile calcolare la distanza stradale.");
-                        return;
-                    }
-                    // Converte i metri stradali in chilometri arrotondati
-                    const km = Math.round(routing.routes.distance / 1000);
-                    document.getElementById('km_fatti').value = km;
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Errore durante il calcolo del tragitto stradale.");
-                });
+            // Calcola e disegna la linea del percorso stradale reale sulla mappa
+            routingControl.setWaypoints([
+                L.latLng(parseFloat(latP), parseFloat(lonP)), // Partenza scelta dall'utente
+                L.latLng(latVigevano, lonVigevano)            // Arrivo fisso a Vigevano
+            ]);
         });
     </script>
 </body>
