@@ -155,15 +155,15 @@
       background-color: #a30000;
     }
 
-/* Box mappa integrato fisso sotto il pulsante */
+/* Mappa stradale sempre visibile fin dall'inizio */
 #contenitore-mappa {
   width: 100%;
-  height: 0px; /* Parte a zero e si allarga solo quando calcola */
+  height: 300px; /* Sempre aperta e visibile */
   border-radius: 8px;
-  margin-top: 0px;
+  margin-top: 15px;
+  border: 1px solid #ccc;
   display: block;
-  overflow: hidden;
-  transition: height 0.4s ease, margin-top 0.4s ease;
+  z-index: 5;
 }
 
 /* Nasconde le tabelle testuali con le direzioni di svolta */
@@ -264,6 +264,28 @@
   // Attende che la pagina sia completamente caricata dal browser
   document.addEventListener("DOMContentLoaded", function() {
     
+// --- BLOCCO 1: CONFIGURAZIONE E AVVIO CON MAPPA INIZIALE ---
+const LAT_RADUNO = 45.3045; 
+const LON_RADUNO = 8.8702;
+const KEY = 'tesla_evento_dati';
+
+let mapInstance = null;
+let routingControl = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("Modulo Tesla pronto!");
+
+  // Inizializza subito la mappa visibile centrata sul raduno a Vigevano
+  mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(mapInstance);
+
+  // Aggiunge un marker rosso provvisorio sul punto del raduno
+  L.marker([LAT_RADUNO, LON_RADUNO]).addTo(mapInstance)
+    .bindPopup('<b>Raduno Tesla</b><br>Campo Volo Leonardo da Vinci')
+    .openPopup();
+
     // ==========================================
     // 1. LOGICA MASCHERA AUTOMATICA PER LE DATE
     // ==========================================
@@ -449,6 +471,50 @@ document.getElementById('btn-calcola').addEventListener('click', function() {
 
   }, 200); // Micro-ritardo di 200ms per garantire la corretta visualizzazione delle mappe
 });
+
+  // --- BLOCCO 4: AGGIORNAMENTO PERCORSO STRADALE REALISTICO ---
+  const btnCalcola = document.getElementById('btn-calcola');
+  if (btnCalcola) {
+    btnCalcola.addEventListener('click', function() {
+      const latVal = document.getElementById('cittaLat').value;
+      const lonVal = document.getElementById('cittaLon').value;
+      const campoDistanza = document.getElementById('distanza');
+
+      if (!latVal || !lonVal) {
+        alert("Seleziona prima una città valida dall'elenco.");
+        return;
+      }
+
+      // Se c'è già un percorso precedente disegnato sulla mappa, lo cancella
+      if (routingControl) {
+        mapInstance.removeControl(routingControl);
+      }
+
+      // Disegna il percorso stradale reale sulle strade italiane
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(parseFloat(latVal), parseFloat(lonVal)), // Partenza
+          L.latLng(LAT_RADUNO, LON_RADUNO)                  // Vigevano
+        ],
+        router: L.Routing.osrmv1({ serviceUrl: 'https://project-osrm.org' }),
+        lineOptions: { styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] },
+        createMarker: function() { return null; } // Evita marker doppi o sovrapposti
+      }).addTo(mapInstance);
+
+      // Quando calcola la rotta estrae la distanza stradale esatta
+      routingControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        if (campoDistanza) {
+          campoDistanza.value = Math.round(routes.summary.totalDistance / 1000) + " KM";
+        }
+        // Zooma in automatico per far vedere tutto il viaggio
+        mapInstance.fitBounds(L.latLngBounds(routes.coordinates));
+      });
+    });
+  }
+
+}); // Fine del DOMContentLoaded (CHIUSURA FONDAMENTALE)
+
 
     // ==========================================
     // 4. INVIO E SALVATAGGIO DEI DATI
