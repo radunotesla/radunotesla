@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registrazione Raduno Tesla
 <!-- Librerie Leaflet e Routing per Mappa e Percorsi Stradali reali -->
+<!-- Devono essere scritte esattamente così, senza tag vuoti -->
 <link rel="stylesheet" href="https://unpkg.com" />
-<script src="https://unpkg.com"></script>
 <script src="https://unpkg.com"></script>
 
 </title>
@@ -380,18 +380,17 @@ document.addEventListener('click', (e) => {
 const latVigevano = 45.2974;
 const lonVigevano = 8.8952;
 
-// Forza l'apertura immediata della mappa (Modifica lo stile CSS da 0px a 300px all'avvio)
+// Forza l'apertura visibile del quadrato della mappa all'avvio
 const divMappa = document.getElementById('contenitore-mappa');
 if (divMappa) {
     divMappa.style.height = '300px';
     divMappa.style.marginTop = '15px';
-    divMappa.style.border = '2px solid #ccc';
 }
 
 // 2. Inizializzazione immediata della mappa sul tuo contenitore
 const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
 
-// Carica la grafica stradale da OpenStreetMap
+// Carica la grafica stradale da OpenStreetMap (Corretto il punto con la virgola!)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
