@@ -187,7 +187,8 @@
 
     <div class="form-group">
       <label for="data-nascita">DATA DI NASCITA:</label>
-      <input type="text" id="data-nascita" name="data_nascita" placeholder="gg/mm/aaaa" maxlength="10" required>
+<!-- Campo Data di Nascita ottimizzato per Mobile -->
+<input type="text" id="data-nascita" name="data_nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="[0-9]*" required>
     </div>
 
     <div class="form-group">
@@ -217,7 +218,8 @@
 
     <div class="form-group">
       <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
-      <input type="text" id="data-macchina" name="data_macchina" placeholder="mm/aaaa" maxlength="7" required>
+<!-- Campo Data Macchina ottimizzato per Mobile -->
+<input type="text" id="data-macchina" name="data_macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="[0-9]*" required>
     </div>
 
     <button type="submit" class="btn-invia">CONFERMA E INVIA</button>
@@ -232,22 +234,38 @@
   document.addEventListener("DOMContentLoaded", function() {
     
 // --- 1. LOGICA MASCHERA AUTOMATICA PER LE DATE ---
-function applicaMascheraData(inputEl, formato) {
-  inputEl.addEventListener('input', function(e) {
-    let cifra = e.target.value.replace(/\D/g, ''); // Rimuove lettere e simboli
-    let valoreFormattato = '';
+// --- MASCHERA DATE COMPATIBILE CON SMARTPHONE E TASTIERE VIRTUALI ---
+// Gestione Data di Nascita (gg/mm/aaaa)
+ 
+const inputNascita = document.getElementById('data-nascita');
+if (inputNascita) {
+  inputNascita.addEventListener('input', function(e) {
+    let v = this.value.replace(/\D/g, ''); // Estrae solo i numeri
+    if (v.length > 8) v = v.slice(0, 8); // Limita a 8 cifre
     
-    if (formato === 'gg/mm/aaaa') {
-      if (cifra.length > 8) cifra = cifra.slice(0, 8);
-      if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
-      if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 4);
-      if (cifra.length > 4) valoreFormattato += '/' + cifra.slice(4, 8);
-    } else if (formato === 'mm/aaaa') {
-      if (cifra.length > 6) cifra = cifra.slice(0, 6);
-      if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
-      if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 6);
+    // Ricostruisce il testo inserendo le barre nei punti giusti
+    if (v.length > 4) {
+      this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+    } else if (v.length > 2) {
+      this.value = v.slice(0, 2) + '/' + v.slice(2);
+    } else {
+      this.value = v;
     }
-    e.target.value = valoreFormattato;
+  });
+}
+
+// Data Macchina (mm/aaaa)
+const inputMacchina = document.getElementById('data-macchina');
+if (inputMacchina) {
+  inputMacchina.addEventListener('input', function(e) {
+    let v = this.value.replace(/\D/g, ''); // Estrae solo i numeri
+    if (v.length > 6) v = v.slice(0, 6); // Limita a 6 cifre
+    
+    if (v.length > 2) {
+      this.value = v.slice(0, 2) + '/' + v.slice(2);
+    } else {
+      this.value = v;
+    }
   });
 }
 
