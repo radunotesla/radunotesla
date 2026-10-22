@@ -155,17 +155,18 @@
       background-color: #a30000;
     }
 
-/* Riquadro mappa stradale istantaneo */
+/* Box mappa integrato fisso sotto il pulsante */
 #contenitore-mappa {
   width: 100%;
-  height: 0; /* Inizialmente chiuso */
+  height: 0px; /* Parte a zero e si allarga solo quando calcola */
   border-radius: 8px;
-  margin-top: 12px;
+  margin-top: 0px;
   display: block;
-  z-index: 5;
+  overflow: hidden;
+  transition: height 0.4s ease, margin-top 0.4s ease;
 }
 
-/* Nasconde le istruzioni testuali a sinistra/destra */
+/* Nasconde le tabelle testuali con le direzioni di svolta */
 .leaflet-routing-container {
   display: none !important;
 }
@@ -226,10 +227,8 @@
       <ul id="suggerimenti-citta" class="suggestions-list"></ul>
 <button type="button" id="btn-calcola" class="btn-secondario">CALCOLA km percorsi</button>
 
-<!-- Nuovo riquadro con mappa integrata diretta tramite Iframe -->
-<div id="box-mappa-stradale" style="display: none; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #ccc;">
-  <iframe id="iframe-mappa" width="100%" height="300" style="border:0;" src=""></iframe>
-</div>
+<!-- Il div in cui si caricherà visivamente il percorso stradale -->
+<div id="contenitore-mappa"></div>
 
       <input type="hidden" id="cittaLat">
       <input type="hidden" id="cittaLon">
@@ -377,54 +376,78 @@ document.addEventListener('click', (e) => {
     // ==========================================
     // 3. LOGICA CALCOLO DISTANZA (KM)
     // ==========================================
-// --- LOGICA DI CALCOLO STRADALE DIRETTA ED IFRAME MAPPA ---
-document.getElementById('btn-calcola').addEventListener('click', async function() {
+// --- LOGICA INTEGRATA PER PERCORSO STRADALE REALE INLINE ---
+let mapInstance = null;
+let routingControl = null;
+
+document.getElementById('btn-calcola').addEventListener('click', function() {
   const latVal = document.getElementById('cittaLat').value;
   const lonVal = document.getElementById('cittaLon').value;
   const campoDistanza = document.getElementById('distanza');
-  const boxMappa = document.getElementById('box-mappa-stradale');
-  const iframeMappa = document.getElementById('iframe-mappa');
+  const boxMappa = document.getElementById('contenitore-mappa');
 
   if (!latVal || !lonVal) {
-    alert("Per favore, seleziona prima una città valida dall'elenco dei suggerimenti.");
+    alert("Per favore, digita e seleziona prima una città valida dall'elenco dei suggerimenti.");
     return;
   }
 
   const latPartenza = parseFloat(latVal);
   const lonPartenza = parseFloat(lonVal);
 
-  try {
-    // 1. Interroga direttamente il server stradale OSRM per ottenere i dati del percorso reale
-    const urlRotta = `https://project-osrm.org{lonPartenza},${latPartenza};${LON_RADUNO},${LAT_RADUNO}?overview=false`;
-    const res = await fetch(urlRotta);
-    const data = await res.json();
+  // Forza l'apertura visiva immediata del contenitore sulla pagina
+  boxMappa.style.height = "320px";
+  boxMappa.style.marginTop = "15px";
+  boxMappa.style.border = "1px solid #ccc";
 
-    if (data && data.routes && data.routes.length > 0) {
-      // Estrae la distanza stradale esatta (convertita da metri a chilometri)
-      const distanzaKmReali = Math.round(data.routes[0].distance / 1000);
-      if (campoDistanza) {
-        campoDistanza.value = distanzaKmReali + " KM";
-      }
-
-      // 2. Carica la mappa visuale del percorso nell'Iframe usando OpenStreetMap
-      // Genera una finestra centrata tra la partenza e la destinazione
-      const latCentro = (latPartenza + LAT_RADUNO) / 2;
-      const lonCentro = (lonPartenza + LON_RADUNO) / 2;
-      
-      // Inserisce l'URL della mappa con il puntatore posizionato
-      iframeMappa.src = `https://openstreetmap.org{Math.min(lonPartenza, LON_RADUNO)-0.1}%2C${Math.min(latPartenza, LAT_RADUNO)-0.1}%2C${Math.max(lonPartenza, LON_RADUNO)+0.1}%2C${Math.max(latPartenza, LAT_RADUNO)+0.1}&layer=mapnik&marker=${LAT_RADUNO}%2C${LON_RADUNO}`;
-      
-      // 3. Rende visibile il riquadro della mappa
-      boxMappa.style.display = "block";
-    } else {
-      alert("Impossibile calcolare il percorso stradale per questa località.");
+  // Inizializzazione della mappa Leaflet
+  if (!mapInstance) {
+    mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(mapInstance);
+  } else {
+    // Se l'utente ricalcola una nuova città, rimuove la rotta precedente per non sovrapporla
+    if (routingControl) {
+      mapInstance.removeControl(routingControl);
     }
-  } catch (error) {
-    // Se la rete è instabile, applica un chilometraggio simulato di emergenza
-    const kmEmergenza = Math.floor(Math.random() * (420 - 40) + 40);
-    if (campoDistanza) campoDistanza.value = kmEmergenza + " KM";
-    boxMappa.style.display = "none";
   }
+
+  // Risolve il bug del riquadro vuoto/grigio forzando il calcolo dei pixel a schermo aperto
+  setTimeout(function() {
+    mapInstance.invalidateSize(true);
+    
+    // Richiesta stradale reale al server OSRM
+    routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(latPartenza, lonPartenza),
+        L.latLng(LAT_RADUNO, LON_RADUNO)
+      ],
+      router: L.Routing.osrmv1({
+        serviceUrl: 'https://project-osrm.org'
+      }),
+      lineOptions: {
+        styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] // Linea rossa Tesla
+      },
+      createMarker: function() { return null; } // Nasconde i pin predefiniti di Leaflet
+    }).addTo(mapInstance);
+
+    // Quando la rotta stradale viene trovata con successo
+    routingControl.on('routesfound', function(e) {
+      const routes = e.routes;
+      const distanzaMetri = routes.summary.totalDistance;
+      const kmStradaliVeri = Math.round(distanzaMetri / 1000); // Converte i metri in KM effettivi
+      
+      // Scrive stabilmente il chilometraggio stradale nel campo del modulo
+      if (campoDistanza) {
+        campoDistanza.value = kmStradaliVeri + " KM";
+      }
+      
+      // Zooma e centra automaticamente la mappa per inquadrare l'intero viaggio
+      const bounds = L.latLngBounds(routes.coordinates);
+      mapInstance.fitBounds(bounds, { padding: });
+    });
+
+  }, 200); // Micro-ritardo di 200ms per garantire la corretta visualizzazione delle mappe
 });
 
     // ==========================================
