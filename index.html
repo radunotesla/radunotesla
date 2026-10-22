@@ -270,68 +270,46 @@
     // ==========================================
     // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
     // ==========================================
-    const inputCitta = document.getElementById('citta');
-    const suggBox = document.getElementById('suggerimenti-citta');
-    let timeoutCerca = null;
+// --- RICEZIONE SUGGERIMENTI CITTÀ (OPENSTREETMAP) ---
+const inputCitta = document.getElementById('citta');
+const suggBox = document.getElementById('suggerimenti-citta');
+let timeoutCerca = null;
 
-    if (inputCitta && suggBox) {
-      inputCitta.addEventListener('input', function() {
-        clearTimeout(timeoutCerca);
-        const q = inputCitta.value.trim();
-        
-        if (q.length < 3) {
-          suggBox.style.display = 'none';
-          return;
-        }
-        
-        timeoutCerca = setTimeout(function() {
-          cercaCitta(q);
-        }, 300);
-      });
-    }
-
-    async function cercaCitta(q) {
+if (inputCitta && suggBox) {
+  inputCitta.addEventListener('input', function() {
+    clearTimeout(timeoutCerca);
+    const q = inputCitta.value.trim();
+    if (q.length < 3) { suggBox.style.display = 'none'; return; }
+    
+    timeoutCerca = setTimeout(async function() {
       try {
         const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
           headers: { 'Accept-Language': 'it' }
         });
-        const data = await res.json(); 
-        suggBox.innerHTML = '';
-        
+        const data = await res.json(); suggBox.innerHTML = '';
         if (data && data.length > 0) {
-          data.forEach(function(p) {
+          data.forEach(p => {
             const li = document.createElement('li');
-            const partiIndirizzo = p.display_name.split(',');
-            
-            li.textContent = partiIndirizzo.slice(0, 3).join(',').trim();
-            
+            const parti = p.display_name.split(',');
+            li.textContent = parti.slice(0, 3).join(',').trim();
             li.onclick = function() {
-              const cittaTesto = partiIndirizzo[0] ? partiIndirizzo[0].trim() : '';
-              const provTesto = partiIndirizzo[1] ? partiIndirizzo[1].trim() : '';
-              
-              inputCitta.value = provTesto ? `${cittaTesto}, ${provTesto}` : cittaTesto;
-              
-              if(document.getElementById('cittaLat')) document.getElementById('cittaLat').value = p.lat;
-              if(document.getElementById('cittaLon')) document.getElementById('cittaLon').value = p.lon;
-              
+              inputCitta.value = parti[0].trim() + (parti[1] ? ', ' + parti[1].trim() : '');
+              document.getElementById('cittaLat').value = p.lat;
+              document.getElementById('cittaLon').value = p.lon;
               suggBox.style.display = 'none';
             };
             suggBox.appendChild(li);
-          }); 
+          });
           suggBox.style.display = 'block';
-        } else {
-          suggBox.style.display = 'none';
-        }
-      } catch(e) {
-        suggBox.style.display = 'none';
-      }
-    }
+        } else { suggBox.style.display = 'none'; }
+      } catch(e) { suggBox.style.display = 'none'; }
+    }, 300);
+  });
+}
 
-    document.addEventListener('click', function(e) { 
-      if (suggBox && !e.target.closest('.form-group')) {
-        suggBox.style.display = 'none'; 
-      }
-    });
+document.addEventListener('click', function(e) { 
+  if (suggBox && !e.target.closest('.form-group')) suggBox.style.display = 'none'; 
+});
 
     // ==========================================
     // 3. LOGICA CALCOLO DISTANZA (KM)
