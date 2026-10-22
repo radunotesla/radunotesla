@@ -376,23 +376,25 @@ document.addEventListener('click', (e) => {
 // BLOCCO 3: LOGICA MAPPA E CALCOLO DISTANZA
 // ==========================================
 
-// 1. Coordinate fisse del Raduno (Campo Volo Leonardo da Vinci, Vigevano)
+// 1. Coordinate fisse del Raduno a Vigevano
 const latVigevano = 45.2974;
 const lonVigevano = 8.8952;
 
-// Forza l'apertura visibile del quadrato della mappa all'avvio
+// Forza l'apertura immediata e visibile del riquadro mappa
 const divMappa = document.getElementById('contenitore-mappa');
 if (divMappa) {
     divMappa.style.height = '300px';
+    divMappa.style.width = '100%';
     divMappa.style.marginTop = '15px';
+    divMappa.style.border = '2px solid #cc0000'; // Bordo rosso così vedi subito se c'è!
 }
 
-// 2. Inizializzazione immediata della mappa sul tuo contenitore
+// 2. Inizializzazione della mappa
 const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
 
-// Carica la grafica stradale da OpenStreetMap (Corretto il punto con la virgola!)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+// Carica una grafica stradale alternativa e super leggera
+L.tileLayer('https://{s}://{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
 }).addTo(map);
 
 // Aggiunge il segnaposto rosso su Vigevano
@@ -400,68 +402,10 @@ L.marker([latVigevano, lonVigevano]).addTo(map)
     .bindPopup('<b>Raduno Tesla 2026</b><br>Campo Volo Leonardo da Vinci')
     .openPopup();
 
-// 3. Funzione per calcolare i KM REALI SU STRADA
-function calcolaKmStradali() {
-    // Controlla gli ID reali dei tuoi campi di input nel modulo (città e km)
-    const campoCitta = document.getElementById('citta_provenienza') || document.getElementById('citta-provenienza');
-    const campoKm = document.getElementById('km_fatti') || document.getElementById('km-fatti');
-
-    if (!campoCitta || !campoCitta.value) {
-        alert("Per favore, inserisci prima la città di provenienza!");
-        return;
-    }
-
-    const cittaProvenienza = campoCitta.value;
-
-    // Trasforma il nome della città in coordinate geografiche (Geocoding)
-    const urlGeocode = `https://openstreetmap.org{encodeURIComponent(cittaProvenienza)}`;
-
-    fetch(urlGeocode)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length === 0) {
-                alert("Città non trovata. Controlla come l'hai scritta!");
-                return;
-            }
-
-            const latPartenza = parseFloat(data.lat);
-            const lonPartenza = parseFloat(data.lon);
-
-            // Sposta la mappa per inquadrare la zona del viaggio
-            map.setView([latPartenza, lonPartenza], 8);
-            L.marker([latPartenza, lonPartenza]).addTo(map).bindPopup(`Partenza da: ${cittaProvenienza}`).openPopup();
-
-// Calcola il percorso stradale effettivo su vie reali (API OSRM)
-            const urlRouting = `https://project-osrm.org{lonPartenza},${latPartenza};${lonVigevano},${latVigevano}?overview=false`;
-
-            return fetch(urlRouting);
-        })
-        .then(response => response.json())
-        .then(routingData => {
-            if (!routingData || !routingData.routes || routingData.routes.length === 0) {
-                alert("Impossibile calcolare il percorso stradale.");
-                return;
-            }
-
-            // Estrae la distanza stradale reale in metri e la converte in chilometri
-            const metri = routingData.routes.distance;
-            const kmTotali = Math.round(metri / 1000);
-
-            // Scrive il risultato numerico nel tuo campo di testo dei KM
-            if (campoKm) {
-                campoKm.value = kmTotali;
-            } else {
-                alert(`Percorso calcolato: ${kmTotali} KM!`);
-            }
-        })
-        .catch(error => {
-            console.error("Errore nel calcolo del percorso:", error);
-            alert("Si è verificato un errore durante il calcolo stradale.");
-        });
-}
-
-// Associa la funzione al clic sul tuo bottone "btn-calcola"
-document.getElementById('btn-calcola').addEventListener('click', calcolaKmStradali);
+// Trucco per forzare l'aggiornamento visivo della mappa all'avvio
+setTimeout(() => {
+    map.invalidateSize();
+}, 500);
 
     // ==========================================
     // 4. INVIO E SALVATAGGIO DEI DATI
