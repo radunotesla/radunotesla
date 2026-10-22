@@ -245,71 +245,138 @@
 </div>
 
 <script>
-  // Coordinate precise di destinazione (Strada Scoglio, Vigevano)
-  const LAT_RADUNO = 45.3045; 
-  const LON_RADUNO = 8.8702;
-
-  let cittaLatSelezionata = null;
-  let cittaLonSelezionata = null;
-
-  // Forza il caricamento solo a pagina completamente renderizzata dal browser
-  document.addEventListener("DOMContentLoaded", function() {
-    
-    // --- FUNZIONE POPOLAMENTO DATE A TENDINA ---
-    const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-    
-    const gNascita = document.getElementById('nascita-giorno');
-    for(let i=1; i<=31; i++) { gNascita.options[gNascita.options.length] = new Option(i, i); }
-    
-    const mNascita = document.getElementById('nascita-mese');
-    const mTesla = document.getElementById('tesla-mese');
-    mesi.forEach((mese, idx) => {
-      mNascita.options[mNascita.options.length] = new Option(mese, idx + 1);
-      mTesla.options[mTesla.options.length] = new Option(mese, idx + 1);
-    });
-
-    const aNascita = document.getElementById('nascita-anno');
-    const annoCorrente = new Date().getFullYear();
-    for(let i=annoCorrente; i>=1920; i--) { aNascita.options[aNascita.options.length] = new Option(i, i); }
-
-    const aTesla = document.getElementById('tesla-anno');
-    for(let i=annoCorrente; i>=2008; i--) { aTesla.options[aTesla.options.length] = new Option(i, i); }
-
-    // --- LOGICA SUGGERIMENTI CITTA' (OPENMAPS/PHOTON) ---
-    const inputCitta = document.getElementById('citta');
-    const listaSuggerimenti = document.getElementById('suggerimenti-citta');
-    const inputDistanza = document.getElementById('distanza');
-    const btnCalcola = document.getElementById('btn-calcola');
-    let debounceTimer = null;
-
-    if (inputCitta && listaSuggerimenti) {
-      inputCitta.addEventListener('input', function() {
-        const testo = this.value.trim();
-        clearTimeout(debounceTimer);
-        
-        if (testo.length < 3) {
-          listaSuggerimenti.style.display = 'none';
-          return;
-        }
-
-        debounceTimer = setTimeout(() => {
-          const url = `https://komoot.io{encodeURIComponent(testo)}&lang=it&filter=osm:key:place&limit=6`;
-
-          fetch(url)
-            .then(res => res.json())
-            .then(data => {
-              listaSuggerimenti.innerHTML = '';
-              const localitaItaliane = data.features.filter(f => f.properties.countrycode === 'IT');
-              
-              if (localitaItaliane.length === 0) {
-                listaSuggerimenti.style.display = 'none';
-                return;
-              }
-
-              localitaItaliane.forEach(item => {
-                const prop = item.properties;
-                const nomeVisualizzato = prop.name + (prop.state ? `, ${prop.state}` : '');
-                
-                const li = document.createElement('li');
-                li.textContent = nomeVisualizzato;
-                
+  // Database Capoluoghi e Città principali d'Italia integrato nativamente per evitare blocchi del browser
+  const DATABASE_CITTA = [
+    {n: "Milano", lat: 45.4642, lon: 9.1900}, {n: "Roma", lat: 41.9028, lon: 12.4964}, {n: "Torino", lat: 45.0703, lon: 7.6868},
+    {n: "Genova", lat: 44.4056, lon: 8.9463}, {n: "Bologna", lat: 44.4949, lon: 11.3426}, {n: "Firenze", lat: 43.7696, lon: 11.2558},
+    {n: "Napoli", lat: 40.8518, lon: 14.2681}, {n: "Palermo", lat: 38.1157, lon: 13.3615}, {n: "Bari", lat: 41.1171, lon: 16.8719},
+    {n: "Catania", lat: 37.5079, lon: 15.0830}, {n: "Venezia", lat: 45.4408, lon: 12.3155}, {n: "Verona", lat: 45.4384, lon: 10.9916},
+    {n: "Messina", lat: 38.1938, lon: 15.5540}, {n: "Padova", lat: 45.4064, lon: 11.8760}, {n: "Trieste", lat: 45.6495, lon: 13.7768},
+    {n: "Brescia", lat: 45.5416, lon: 10.2118}, {n: "Parma", lat: 44.8015, lon: 10.3279}, {n: "Prato", lat: 43.8777, lon: 11.1022},
+    {n: "Modena", lat: 44.6471, lon: 10.9252}, {n: "Reggio Emilia", lat: 44.6983, lon: 10.6313}, {n: "Perugia", lat: 43.1107, lon: 12.3908},
+    {n: "Ravenna", lat: 44.4184, lon: 12.2035}, {n: "Livorno", lat: 43.5485, lon: 10.3106}, {n: "Cagliari", lat: 39.2238, lon: 9.1217},
+    {n: "Foggia", lat: 41.4622, lon: 15.5446}, {n: "Rimini", lat: 44.0575, lon: 12.5653}, {n: "Salerno", lat: 40.6785, lon: 14.7657},
+    {n: "Ferrara", lat: 44.8381, lon: 11.6198}, {n: "Sassari", lat: 40.7259, lon: 8.5556}, {n: "Latina", lat: 41.4676, lon: 12.9036},
+    {n: "Monza", lat: 45.5845, lon: 9.2735}, {n: "Siracusa", lat: 37.0755, lon: 15.2866}, {n: "Pescara", lat: 42.4618, lon: 14.2142},
+    {n: "Bergamo", lat: 45.6983, lon: 9.6773}, {n: "Forlì", lat: 44.2227, lon: 12.0407}, {n: "Trento", lat: 46.0748, lon: 11.1217},
+    {n: "Vicenza", lat: 45.5455, lon: 11.5350}, {n: "Terni", lat: 42.5638, lon: 12.6414}, {n: "Bolzano", lat: 46.4908, lon: 11.3548},
+    {n: "Novara", lat: 45.4468, lon: 8.6211}, {n: "Piacenza", lat: 45.0526, lon: 9.6930}, {n: "Ancona", lat: 43.6159, lon: 13.5188},
+    {n: "Andria", lat: 41.2263, lon: 16.2955}, {n: "Udine", lat: 46.0711, lon: 13.2446}, {n: "Arezzo", lat: 43.4627, lon: 11.8797},
+    {n: "Cesena", lat: 44.1391, lon: 12.2431}, {n: "Lecce", lat: 40.3515, lon: 18.1750}, {n: "Pesaro", lat: 43.9100, lon: 12.9133},
+    {n: "Alessandria", lat: 44.9130, lon: 8.6171}, {n: "Barletta", lat: 41.3186, lon: 16.2818}, {n: "Catanzaro", lat: 38.9054, lon: 16.5948},
+    {n: "Pistoia", lat: 43.9317, lon: 10.9166}, {n: "Pisa", lat: 43.7085, lon: 10.4036}, {n: "Lucca", lat: 43.8429, lon: 10.5027},
+    {n: "Cremona", lat: 45.1333, lon: 10.0333}, {n: "Como", lat: 45.8081, lon: 9.0852}, {n: "Treviso", lat: 45.6669, lon: 12.2431},
+    {n: "Varese", lat: 45.8167, lon: 8.8333}, {n: "Asti", lat: 44.9012, lon: 8.2069}, {n: "Caserta", lat: 41.0739, lon: 14.3323},
+    {n: "Grosseto", lat: 42.7663, lon: 11.1101}, {n: "Pavia", lat: 45.1850, lon: 9.1556}, {n: "Ragusa", lat: 36.9269, lon: 14.7258},
+{n: "Vigevano", lat: 45.3169, lon: 8.8606}, {n: "L'Aquila", lat: 42.3498, lon: 13.3995}, {n: "Trapani", lat: 38.0178, lon: 12.5365},
+{n: "Cuneo", lat: 44.3833, lon: 7.5500}, {n: "Savona", lat: 44.3072, lon: 8.4811}, {n: "Matera", lat: 40.6664, lon: 16.6043},
+{n: "Benevento", lat: 41.1307, lon: 14.7770}, {n: "Crotone", lat: 39.0807, lon: 17.1269}, {n: "Avellino", lat: 40.9141, lon: 14.7932},
+{n: "Caltanissetta", lat: 37.4901, lon: 14.0622}, {n: "Potenza", lat: 40.6384, lon: 15.8019}, {n: "Lecco", lat: 45.8558, lon: 9.3975},
+{n: "Rovigo", lat: 45.0701, lon: 11.7903}, {n: "Siena", lat: 43.3183, lon: 11.3314}, {n: "Viterbo", lat: 42.4173, lon: 12.1042},
+{n: "Chieti", lat: 42.3510, lon: 14.1675}, {n: "Massa", lat: 44.0354, lon: 10.1417}, {n: "Biella", lat: 45.5630, lon: 8.0538},
+{n: "Sondrio", lat: 46.1690, lon: 9.8692}, {n: "Frosinone", lat: 41.6394, lon: 13.3411}, {n: "Agrigento", lat: 37.3111, lon: 13.5765},
+{n: "Mantova", lat: 45.1564, lon: 10.7911}, {n: "Lodi", lat: 45.3139, lon: 9.5032}, {n: "Campobasso", lat: 41.5610, lon: 14.6684},
+{n: "Teramo", lat: 42.6587, lon: 13.7044}, {n: "Pordenone", lat: 45.9566, lon: 12.6605}, {n: "Rieti", lat: 42.4046, lon: 12.8617},
+{n: "Oristano", lat: 39.9061, lon: 8.5912}, {n: "Nuoro", lat: 40.3204, lon: 9.3284}, {n: "Ascoli Piceno", lat: 42.8536, lon: 13.5746},
+{n: "Macerata", lat: 43.3002, lon: 13.4531}, {n: "Gorizia", lat: 45.9402, lon: 13.6214}, {n: "Imperia", lat: 43.8860, lon: 8.0422},
+{n: "Sassuolo", lat: 44.5411, lon: 10.7819}, {n: "Verbania", lat: 45.9221, lon: 8.5516}, {n: "Vercelli", lat: 45.3243, lon: 8.4231},
+{n: "Enna", lat: 37.5661, lon: 14.2753}, {n: "Isernia", lat: 41.5958, lon: 14.2346}, {n: "Vibo Valentia", lat: 38.6751, lon: 16.1014}
+];
+const LAT_RADUNO = 45.3045;
+const LON_RADUNO = 8.8702;
+let cittaLatSelezionata = null;
+let cittaLonSelezionata = null;
+// Caricamento immediato e sicuro senza ritardi
+window.onload = function() {
+// --- INIEZIONE DIRETTA DATI NEI MENU A TENDINA ---
+const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+const gNascita = document.getElementById('nascita-giorno');
+const mNascita = document.getElementById('nascita-mese');
+const aNascita = document.getElementById('nascita-anno');
+const mTesla = document.getElementById('tesla-mese');
+const aTesla = document.getElementById('tesla-anno');
+// Svuota e ripopola Giorno
+gNascita.innerHTML = 'Giorno';
+for(let i=1; i<=31; i++) { gNascita.options[gNascita.options.length] = new Option(i, i); }
+// Svuota e ripopola Mesi
+mNascita.innerHTML = 'Mese';
+mTesla.innerHTML = 'Mese';
+mesi.forEach((mese, idx) => {
+mNascita.options[mNascita.options.length] = new Option(mese, idx + 1);
+mTesla.options[mTesla.options.length] = new Option(mese, idx + 1);
+});
+// Svuota e ripopola Anno Nascita
+const annoCorrente = new Date().getFullYear();
+aNascita.innerHTML = 'Anno';
+for(let i=annoCorrente; i>=1920; i--) { aNascita.options[aNascita.options.length] = new Option(i, i); }
+// Svuota e ripopola Anno Tesla
+aTesla.innerHTML = 'Anno';
+for(let i=annoCorrente; i>=2008; i--) { aTesla.options[aTesla.options.length] = new Option(i, i); }
+// --- LOGICA SUGGERIMENTI INTERNA CITTA' ---
+const inputCitta = document.getElementById('citta');
+const listaSuggerimenti = document.getElementById('suggerimenti-citta');
+const inputDistanza = document.getElementById('distanza');
+const btnCalcola = document.getElementById('btn-calcola');
+inputCitta.addEventListener('input', function() {
+const query = this.value.trim().toLowerCase();
+listaSuggerimenti.innerHTML = '';
+if (query.length < 2) {
+listaSuggerimenti.style.display = 'none';
+return;
+}
+// Cerca nel database integrato evitando chiamate esterne web bloccate
+const filtrate = DATABASE_CITTA.filter(c => c.n.toLowerCase().startsWith(query)).slice(0, 5);
+if (filtrate.length === 0) {
+listaSuggerimenti.style.display = 'none';
+return;
+}
+filtrate.forEach(item => {
+const li = document.createElement('li');
+li.textContent = item.n;
+li.addEventListener('click', function() {
+inputCitta.value = item.n;
+cittaLatSelezionata = item.lat;
+cittaLonSelezionata = item.lon;
+listaSuggerimenti.style.display = 'none';
+inputDistanza.value = ''; // Resetta se l'utente cambia città
+});
+listaSuggerimenti.appendChild(li);
+});
+listaSuggerimenti.style.display = 'block';
+});
+document.addEventListener('click', function(e) {
+if (e.target !== inputCitta) {
+listaSuggerimenti.style.display = 'none';
+}
+});
+// --- PULSANTE FISICO CALCOLA KM ---
+btnCalcola.addEventListener('click', function() {
+if (cittaLatSelezionata !== null && cittaLonSelezionata !== null) {
+const R = 6371; // Raggio della Terra in km
+const dLat = (LAT_RADUNO - cittaLatSelezionata) * Math.PI / 180;
+const dLon = (LON_RADUNO - cittaLonSelezionata) * Math.PI / 180;
+const a =
+Math.sin(dLat/2) * Math.sin(dLat/2) +
+Math.cos(cittaLatSelezionata * Math.PI / 180) * Math.cos(LAT_RADUNO * Math.PI / 180) *
+Math.sin(dLon/2) * Math.sin(dLon/2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+const km = Math.round(R * c);
+inputDistanza.value = km + " km";
+} else {
+alert("Digita il nome di una città principale e selezionala dall'elenco prima di calcolare.");
+}
+});
+};
+// Blocco inserimento lettere nel campo targa
+document.getElementById('targa').addEventListener('input', function() {
+this.value = this.value.replace(/[^0-9]/g, '');
+});
+document.getElementById('modulo-raduno').addEventListener('submit', function(e) {
+e.preventDefault();
+const dist = document.getElementById('distanza').value;
+if (dist === "" || dist.includes("Clicca")) {
+alert("Calcola prima i km percorsi!");
+return;
+}
+alert("Dati pronti per l'archiviazione!");
+});
