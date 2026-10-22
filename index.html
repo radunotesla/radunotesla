@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registrazione Raduno Tesla
-<!-- Librerie per il calcolo stradale integrato -->
-<link rel="stylesheet" href="https://unpkg.com" />
+<!-- Librerie Leaflet e Routing per Mappa e Percorsi Stradali reali -->
 <link rel="stylesheet" href="https://unpkg.com" />
 <script src="https://unpkg.com"></script>
 <script src="https://unpkg.com"></script>
@@ -179,7 +178,7 @@
 <div class="form-container">
 
   <div class="header-evento">
-    <h1>RADUNO 17</h1>
+    <h1>RADUNO 17.1</h1>
     <h2>TESLA</h2>
     <p><strong>SABATO 24 OTTOBRE 2026</strong></p>
     <p><em>Dalle 15:00 Fino Al Tramonto</em></p>
@@ -374,81 +373,96 @@ document.addEventListener('click', (e) => {
 });
 
     // ==========================================
-    // 3. LOGICA CALCOLO DISTANZA (KM)
-    // ==========================================
-// --- LOGICA INTEGRATA PER PERCORSO STRADALE REALE INLINE ---
-let mapInstance = null;
-let routingControl = null;
+// BLOCCO 3: LOGICA MAPPA E CALCOLO DISTANZA
+// ==========================================
 
-document.getElementById('btn-calcola').addEventListener('click', function() {
-  const latVal = document.getElementById('cittaLat').value;
-  const lonVal = document.getElementById('cittaLon').value;
-  const campoDistanza = document.getElementById('distanza');
-  const boxMappa = document.getElementById('contenitore-mappa');
+// 1. Coordinate fisse del Raduno (Campo Volo Leonardo da Vinci, Vigevano)
+const latVigevano = 45.2974;
+const lonVigevano = 8.8952;
 
-  if (!latVal || !lonVal) {
-    alert("Per favore, digita e seleziona prima una città valida dall'elenco dei suggerimenti.");
-    return;
-  }
+// Forza l'apertura immediata della mappa (Modifica lo stile CSS da 0px a 300px all'avvio)
+const divMappa = document.getElementById('contenitore-mappa');
+if (divMappa) {
+    divMappa.style.height = '300px';
+    divMappa.style.marginTop = '15px';
+    divMappa.style.border = '2px solid #ccc';
+}
 
-  const latPartenza = parseFloat(latVal);
-  const lonPartenza = parseFloat(lonVal);
+// 2. Inizializzazione immediata della mappa sul tuo contenitore
+const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
 
-  // Forza l'apertura visiva immediata del contenitore sulla pagina
-  boxMappa.style.height = "320px";
-  boxMappa.style.marginTop = "15px";
-  boxMappa.style.border = "1px solid #ccc";
+// Carica la grafica stradale da OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
 
-  // Inizializzazione della mappa Leaflet
-  if (!mapInstance) {
-    mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(mapInstance);
-  } else {
-    // Se l'utente ricalcola una nuova città, rimuove la rotta precedente per non sovrapporla
-    if (routingControl) {
-      mapInstance.removeControl(routingControl);
+// Aggiunge il segnaposto rosso su Vigevano
+L.marker([latVigevano, lonVigevano]).addTo(map)
+    .bindPopup('<b>Raduno Tesla 2026</b><br>Campo Volo Leonardo da Vinci')
+    .openPopup();
+
+// 3. Funzione per calcolare i KM REALI SU STRADA
+function calcolaKmStradali() {
+    // Controlla gli ID reali dei tuoi campi di input nel modulo (città e km)
+    const campoCitta = document.getElementById('citta_provenienza') || document.getElementById('citta-provenienza');
+    const campoKm = document.getElementById('km_fatti') || document.getElementById('km-fatti');
+
+    if (!campoCitta || !campoCitta.value) {
+        alert("Per favore, inserisci prima la città di provenienza!");
+        return;
     }
-  }
 
-  // Risolve il bug del riquadro vuoto/grigio forzando il calcolo dei pixel a schermo aperto
-  setTimeout(function() {
-    mapInstance.invalidateSize(true);
-    
-    // Richiesta stradale reale al server OSRM
-    routingControl = L.Routing.control({
-      waypoints: [
-        L.latLng(latPartenza, lonPartenza),
-        L.latLng(LAT_RADUNO, LON_RADUNO)
-      ],
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://project-osrm.org'
-      }),
-      lineOptions: {
-        styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] // Linea rossa Tesla
-      },
-      createMarker: function() { return null; } // Nasconde i pin predefiniti di Leaflet
-    }).addTo(mapInstance);
+    const cittaProvenienza = campoCitta.value;
 
-    // Quando la rotta stradale viene trovata con successo
-    routingControl.on('routesfound', function(e) {
-      const routes = e.routes;
-      const distanzaMetri = routes.summary.totalDistance;
-      const kmStradaliVeri = Math.round(distanzaMetri / 1000); // Converte i metri in KM effettivi
-      
-      // Scrive stabilmente il chilometraggio stradale nel campo del modulo
-      if (campoDistanza) {
-        campoDistanza.value = kmStradaliVeri + " KM";
-      }
-      
-      // Zooma e centra automaticamente la mappa per inquadrare l'intero viaggio
-      const bounds = L.latLngBounds(routes.coordinates);
-      mapInstance.fitBounds(bounds);
-    });
+    // Trasforma il nome della città in coordinate geografiche (Geocoding)
+    const urlGeocode = `https://openstreetmap.org{encodeURIComponent(cittaProvenienza)}`;
 
-  }, 200); // Micro-ritardo di 200ms per garantire la corretta visualizzazione delle mappe
-});
+    fetch(urlGeocode)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                alert("Città non trovata. Controlla come l'hai scritta!");
+                return;
+            }
+
+            const latPartenza = parseFloat(data.lat);
+            const lonPartenza = parseFloat(data.lon);
+
+            // Sposta la mappa per inquadrare la zona del viaggio
+            map.setView([latPartenza, lonPartenza], 8);
+            L.marker([latPartenza, lonPartenza]).addTo(map).bindPopup(`Partenza da: ${cittaProvenienza}`).openPopup();
+
+// Calcola il percorso stradale effettivo su vie reali (API OSRM)
+            const urlRouting = `https://project-osrm.org{lonPartenza},${latPartenza};${lonVigevano},${latVigevano}?overview=false`;
+
+            return fetch(urlRouting);
+        })
+        .then(response => response.json())
+        .then(routingData => {
+            if (!routingData || !routingData.routes || routingData.routes.length === 0) {
+                alert("Impossibile calcolare il percorso stradale.");
+                return;
+            }
+
+            // Estrae la distanza stradale reale in metri e la converte in chilometri
+            const metri = routingData.routes.distance;
+            const kmTotali = Math.round(metri / 1000);
+
+            // Scrive il risultato numerico nel tuo campo di testo dei KM
+            if (campoKm) {
+                campoKm.value = kmTotali;
+            } else {
+                alert(`Percorso calcolato: ${kmTotali} KM!`);
+            }
+        })
+        .catch(error => {
+            console.error("Errore nel calcolo del percorso:", error);
+            alert("Si è verificato un errore durante il calcolo stradale.");
+        });
+}
+
+// Associa la funzione al clic sul tuo bottone "btn-calcola"
+document.getElementById('btn-calcola').addEventListener('click', calcolaKmStradali);
 
     // ==========================================
     // 4. INVIO E SALVATAGGIO DEI DATI
