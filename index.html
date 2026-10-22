@@ -270,7 +270,7 @@
     // ==========================================
     // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
     // ==========================================
-// --- RICEZIONE SUGGERIMENTI CITTÀ (OPENSTREETMAP) ---
+// --- LOGICA SUGGERIMENTI CITTÀ CORRETTA ---
 const inputCitta = document.getElementById('citta');
 const suggBox = document.getElementById('suggerimenti-citta');
 let timeoutCerca = null;
@@ -283,17 +283,20 @@ if (inputCitta && suggBox) {
     
     timeoutCerca = setTimeout(async function() {
       try {
-        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
-          headers: { 'Accept-Language': 'it' }
-        });
-        const data = await res.json(); suggBox.innerHTML = '';
+        // Endpoint super-ricettivo e veloce con filtro geografico per l'Italia
+        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`);
+        const data = await res.json(); 
+        suggBox.innerHTML = '';
+        
         if (data && data.length > 0) {
-          data.forEach(p => {
+          data.forEach(function(p) {
             const li = document.createElement('li');
             const parti = p.display_name.split(',');
-            li.textContent = parti.slice(0, 3).join(',').trim();
+            // Mostra ad esempio: "Milano, Lombardia"
+            li.textContent = parti[0].trim() + (parti[1] ? ', ' + parti[1].trim() : '');
+            
             li.onclick = function() {
-              inputCitta.value = parti[0].trim() + (parti[1] ? ', ' + parti[1].trim() : '');
+              inputCitta.value = li.textContent;
               document.getElementById('cittaLat').value = p.lat;
               document.getElementById('cittaLon').value = p.lon;
               suggBox.style.display = 'none';
@@ -310,6 +313,7 @@ if (inputCitta && suggBox) {
 document.addEventListener('click', function(e) { 
   if (suggBox && !e.target.closest('.form-group')) suggBox.style.display = 'none'; 
 });
+
 
     // ==========================================
     // 3. LOGICA CALCOLO DISTANZA (KM)
