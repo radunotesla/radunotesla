@@ -270,7 +270,7 @@
     // ==========================================
     // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
     // ==========================================
-// --- LOGICA SUGGERIMENTI CITTÀ CORRETTA ---
+// --- AUTOCOMPLETE CITTÀ ORIGINALE INTEGRATO ---
 const inputCitta = document.getElementById('citta');
 const suggBox = document.getElementById('suggerimenti-citta');
 let timeoutCerca = null;
@@ -283,37 +283,33 @@ if (inputCitta && suggBox) {
     
     timeoutCerca = setTimeout(async function() {
       try {
-        // Endpoint super-ricettivo e veloce con filtro geografico per l'Italia
-        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`);
+        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
         const data = await res.json(); 
         suggBox.innerHTML = '';
         
-        if (data && data.length > 0) {
-          data.forEach(function(p) {
-            const li = document.createElement('li');
-            const parti = p.display_name.split(',');
-            // Mostra ad esempio: "Milano, Lombardia"
-            li.textContent = parti[0].trim() + (parti[1] ? ', ' + parti[1].trim() : '');
-            
-            li.onclick = function() {
-              inputCitta.value = li.textContent;
-              document.getElementById('cittaLat').value = p.lat;
-              document.getElementById('cittaLon').value = p.lon;
-              suggBox.style.display = 'none';
-            };
-            suggBox.appendChild(li);
-          });
-          suggBox.style.display = 'block';
-        } else { suggBox.style.display = 'none'; }
-      } catch(e) { suggBox.style.display = 'none'; }
+        data.forEach(p => {
+          const div = document.createElement('li'); 
+          div.textContent = p.display_name;
+          div.onclick = () => {
+            // Ripristinata l'esatta logica che usavi mesi fa
+            inputCitta.value = p.display_name.split(',').slice(0,2).join(',').trim();
+            document.getElementById('cittaLat').value = p.lat; 
+            document.getElementById('cittaLon').value = p.lon;
+            suggBox.style.display = 'none';
+          }; 
+          suggBox.appendChild(div);
+        }); 
+        suggBox.style.display = data.length ? 'block' : 'none';
+      } catch(e) {
+        suggBox.style.display = 'none';
+      }
     }, 300);
   });
 }
 
-document.addEventListener('click', function(e) { 
+document.addEventListener('click', (e) => { 
   if (suggBox && !e.target.closest('.form-group')) suggBox.style.display = 'none'; 
 });
-
 
     // ==========================================
     // 3. LOGICA CALCOLO DISTANZA (KM)
@@ -391,3 +387,4 @@ document.addEventListener('click', function(e) {
 </script>
 </body>
 </html>
+
