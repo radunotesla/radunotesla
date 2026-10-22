@@ -227,134 +227,9 @@
 </div>
 
 <script>
-  const LAT_RADUNO = 45.3045; 
-  const LON_RADUNO = 8.8702;
-  const KEY = 'tesla_evento_dati';
-
-  document.addEventListener("DOMContentLoaded", function() {
+  // Controlla che tutto il codice sia racchiuso dentro questo evento di avvio document.addEventListener("DOMContentLoaded", function() { // 1. Coordinate del raduno const LAT_RADUNO = 45.3045; const LON_RADUNO = 8.8702; const KEY = 'tesla_evento_dati';
     
-// --- 1. LOGICA MASCHERA AUTOMATICA PER LE DATE ---
-// --- MASCHERA DATE COMPATIBILE CON SMARTPHONE E TASTIERE VIRTUALI ---
-// Gestione Data di Nascita (gg/mm/aaaa)
- 
-const inputNascita = document.getElementById('data-nascita');
-if (inputNascita) {
-  inputNascita.addEventListener('input', function(e) {
-    let v = this.value.replace(/\D/g, ''); // Estrae solo i numeri
-    if (v.length > 8) v = v.slice(0, 8); // Limita a 8 cifre
-    
-    // Ricostruisce il testo inserendo le barre nei punti giusti
-    if (v.length > 4) {
-      this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-    } else if (v.length > 2) {
-      this.value = v.slice(0, 2) + '/' + v.slice(2);
-    } else {
-      this.value = v;
-    }
-  });
-}
-
-// Data Macchina (mm/aaaa)
-const inputMacchina = document.getElementById('data-macchina');
-if (inputMacchina) {
-  inputMacchina.addEventListener('input', function(e) {
-    let v = this.value.replace(/\D/g, ''); // Estrae solo i numeri
-    if (v.length > 6) v = v.slice(0, 6); // Limita a 6 cifre
-    
-    if (v.length > 2) {
-      this.value = v.slice(0, 2) + '/' + v.slice(2);
-    } else {
-      this.value = v;
-    }
-  });
-}
-
-// Attivazione della maschera sui due campi
-applicaMascheraData(document.getElementById('data-nascita'), 'gg/mm/aaaa');
-applicaMascheraData(document.getElementById('data-macchina'), 'mm/aaaa');
-
-// --- 2. LOGICA SUGGERIMENTI CITTÀ (AUTOCOMPLETE) ---
-const inputCitta = document.getElementById('citta');
-const suggBox = document.getElementById('suggerimenti-citta');
-let timeoutCerca = null;
-
-// Ascolta la digitazione dell'utente
-inputCitta.addEventListener('input', () => {
-  clearTimeout(timeoutCerca);
-  const q = inputCitta.value.trim();
-  
-  // Mostra i suggerimenti solo se l'utente ha scritto almeno 3 lettere
-  if (q.length < 3) {
-    suggBox.style.display = 'none';
-    return;
-  }
-  
-  // Attende 300 millisecondi dall'ultima battuta prima di inviare la richiesta (evita blocchi del server)
-  timeoutCerca = setTimeout(() => cercaCitta(q), 300);
-});
-
-async function cercaCitta(q) {
-  try {
-    // Chiamata all'API Nominatim di OpenStreetMap limitata all'Italia e in lingua italiana
-    const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
-      headers: { 'Accept-Language': 'it' }
-    });
-    const data = await res.json(); 
-    suggBox.innerHTML = '';
-    
-    if (data && data.length > 0) {
-      data.forEach(p => {
-        const li = document.createElement('li');
-        
-        // Estrae le prime tre parti dell'indirizzo restituito (es: Milano, Lombardia, Italia)
-        const partiIndirizzo = p.display_name.split(',');
-        li.textContent = partiIndirizzo.slice(0, 3).join(',').trim();
-        
-        // Al click sul suggerimento, compila il campo principale e salva lat/lon nei campi nascosti
-        li.onclick = () => {
-          inputCitta.value = partiIndirizzo.slice(0, 2).join(',').trim(); // Mostra solo Comune, Provincia o Regione
-          document.getElementById('cittaLat').value = p.lat; 
-          document.getElementById('cittaLon').value = p.lon;
-          suggBox.style.display = 'none'; // Nasconde la lista
-        }; 
-        suggBox.appendChild(li);
-      }); 
-      suggBox.style.display = 'block'; // Mostra l'elenco a comparsa
-    } else {
-      suggBox.style.display = 'none';
-    }
-  } catch(e) {
-    // In caso di errore o blocco di rete, nasconde i suggerimenti senza rompere il modulo
-    suggBox.style.display = 'none';
-  }
-}
-
-// Chiude la tendina dei suggerimenti se l'utente clicca in un punto qualsiasi fuori dal form
-document.addEventListener('click', (e) => { 
-  if (!e.target.closest('.form-group')) {
-    suggBox.style.display = 'none'; 
-  }
-});
-
-
-    // --- 3. CALCOLO KM STRADALI (Con Fallback di Sicurezza) ---
-    document.getElementById('btn-calcola').addEventListener('click', function() {
-      const latVal = document.getElementById('cittaLat').value;
-      const lonVal = document.getElementById('cittaLon').value;
-      
-      // Fallback: Se le coordinate mancano (API offline), genera un chilometraggio casuale realistico per l'Italia
-
-if (!latVal || !lonVal) { if(inputCitta.value.trim().length > 2) { const kmSimulati = Math.floor(Math.random() * (450 - 30) + 30); document.getElementById('distanza').value = kmSimulati + " KM"; return; } else { alert("Scrivi prima il nome della tua città."); return; } }
-const lat = parseFloat(latVal); const lon = parseFloat(lonVal); const R = 6371; const dLat = (lat - LAT_RADUNO) * Math.PI / 180; const dLon = (lon - LON_RADUNO) * Math.PI / 180;
-const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(LAT_RADUNO * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); const distanzaKm = Math.round(R * c);
-document.getElementById('distanza').value = distanzaKm + " KM"; });
-// --- 4. INVIO E SALVATAGGIO DEI DATI --- document.getElementById('modulo-raduno').addEventListener('submit', function(e) { e.preventDefault();
-const nuovaRegistrazione = { nome: document.getElementById('nome').value, cognome: document.getElementById('cognome').value, email: document.getElementById('email').value, targa: document.getElementById('targa').value, data_nascita: document.getElementById('data-nascita').value, km_tesla: document.getElementById('km_tesla').value, citta: inputCitta.value, distanza_raduno: document.getElementById('distanza').value, modello: document.getElementById('modello').value, data_tesla: document.getElementById('data-macchina').value, timestamp: new Date().toISOString() };
-const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]'); datiAttuali.push(nuovaRegistrazione); localStorage.setItem(KEY, JSON.stringify(datiAttuali));
-alert("Registrazione salvata in locale sul browser con successo!"); this.reset(); document.getElementById('distanza').value = ''; document.getElementById('cittaLat').value = ''; document.getElementById('cittaLon').value = ''; });
-});
-
+// 2. Logica Maschera Date (Nascita e Macchina) const inputNascita = document.getElementById('data-nascita'); if (inputNascita) { inputNascita.addEventListener('input', function() { let v = this.value.replace(/\D/g, ''); if (v.length > 8) v = v.slice(0, 8); if (v.length > 4) { this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4); } else if (v.length > 2) { this.value = v.slice(0, 2) + '/' + v.slice(2); } else { this.value = v; } }); } const inputMacchina = document.getElementById('data-macchina'); if (inputMacchina) { inputMacchina.addEventListener('input', function() { let v = this.value.replace(/\D/g, ''); if (v.length > 6) v = v.slice(0, 6); if (v.length > 2) { this.value = v.slice(0, 2) + '/' + v.slice(2); } else { this.value = v; } }); } // 3. Logica Suggerimenti Città const inputCitta = document.getElementById('citta'); const suggBox = document.getElementById('suggerimenti-citta'); let timeoutCerca = null; if (inputCitta && suggBox) { inputCitta.addEventListener('input', () => { clearTimeout(timeoutCerca); const q = inputCitta.value.trim(); if (q.length < 3) { suggBox.style.display = 'none'; return; } timeoutCerca = setTimeout(() => cercaCitta(q), 300); }); } async function cercaCitta(q) { try { const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, { headers: { 'Accept-Language': 'it' } }); const data = await res.json(); suggBox.innerHTML = ''; if (data && data.length > 0) { data.forEach(p => { const li = document.createElement('li'); const partiIndirizzo = p.display_name.split(','); li.textContent = partiIndirizzo.slice(0, 3).join(',').trim(); li.onclick = () => { const cittaPulita = partiIndirizzo[0].trim(); const provPulita = partiIndirizzo[1] ? partiIndirizzo[1].trim() : ''; inputCitta.value = provPulita ? `${cittaPulita}, ${provPulita}` : cittaPulita; document.getElementById('cittaLat').value = p.lat; document.getElementById('cittaLon').value = p.lon; suggBox.style.display = 'none'; }; suggBox.appendChild(li); }); suggBox.style.display = 'block'; } else { suggBox.style.display = 'none'; } } catch(e) { suggBox.style.display = 'none'; } } document.addEventListener('click', (e) => { if(!e.target.closest('.form-group')) suggBox.style.display = 'none'; }); });
 
 
 
