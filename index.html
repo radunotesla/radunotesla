@@ -1,131 +1,305 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrazione Raduno Tesla 2026</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 600px; background: #fff; margin: 0 auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .header { text-align: center; border-bottom: 2px solid #cc0000; padding-bottom: 20px; margin-bottom: 25px; }
-        .header h1 { color: #cc0000; margin: 0 0 5px 0; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; }
-        .header p { margin: 5px 0; color: #666; font-size: 14px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        input[type="text"], input[type="email"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
-        .row { display: flex; gap: 15px; }
-        .row .form-group { flex: 1; }
-        .calc-container { display: flex; gap: 10px; align-items: flex-end; }
-        .btn-calc { background-color: #555; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap; }
-        .btn-calc:hover { background-color: #333; }
-        .btn-submit { width: 100%; background-color: #cc0000; color: white; border: none; padding: 15px; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 20px; }
-        .btn-submit:hover { background-color: #990000; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrazione Raduno Tesla</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f4f7;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 450px;
+      box-sizing: border-box;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #cc0000; /* Rosso stile Tesla */
+      font-weight: 700;
+    }
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    input[type="text"], input[type="email"], input[type="number"], select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 15px;
+      background-color: #fff;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #cc0000;
+    }
+    input:disabled, input[readonly] {
+      background-color: #f0f0f0;
+      color: #666;
+      cursor: not-allowed;
+    }
+    /* Animazione e stile per il campo dinamico "Altro" */
+    #gruppo-altro {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Stile CORRETTO e visibile per la tendina dei suggerimenti città */
+    .suggestions-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #ffffff !important; /* Forza lo sfondo bianco */
+      border: 1px solid #ccc;
+      border-radius: 0 0 6px 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 9999; /* Rimane sopra a tutto */
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .suggestions-list li {
+      padding: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      background-color: #ffffff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .suggestions-list li:hover {
+      background-color: #f5f5f5 !important;
+    }
+    .btn-secondario {
+      width: 100%;
+      padding: 10px;
+      background-color: #555;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .btn-secondario:hover {
+      background-color: #333;
+    }
+    .btn-invia {
+      width: 100%;
+      padding: 14px;
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 25px;
+      transition: background 0.2s;
+    }
+    .btn-invia:hover {
+      background-color: #a30000;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>Raduno Tesla</h1>
-        <p><strong>SABATO 24 OTTOBRE 2026</strong></p>
-        <p>Dalle 15:00 Fino Al Tramonto</p>
-        <p>Campo Volo Leonardo da Vinci - Strada Scoglio 27029 Vigevano (PV)</p>
+<div class="form-container">
+  <h2>Registrazione Raduno Tesla</h2>
+  
+  <form id="modulo-raduno">
+    
+    <div class="form-group">
+      <label for="nome">Nome:</label>
+      <input type="text" id="nome" name="nome" placeholder="Inserisci il tuo nome" required>
     </div>
 
-    <form id="registrationForm">
-        <div class="row">
-            <div class="form-group">
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" required>
-            </div>
-            <div class="form-group">
-                <label for="cognome">Cognome</label>
-                <input type="text" id="cognome" name="cognome" required>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="cognome">Cognome:</label>
+      <input type="text" id="cognome" name="cognome" placeholder="Inserisci il tuo cognome" required>
+    </div>
 
-        <div class="form-group">
-            <label for="email">E-mail</label>
-            <input type="email" id="email" name="email" required>
-        </div>
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" placeholder="esempio@email.com" required>
+    </div>
 
-        <div class="row">
-            <div class="form-group">
-                <label for="targa">Targa (Solo i 3 numeri centrali)</label>
-                <input type="text" id="targa" name="targa" pattern="\d{3}" maxlength="3" placeholder="Es. 123" required>
-            </div>
-            <div class="form-group">
-                <label for="nascita">Data di Nascita</label>
-                <input type="date" id="nascita" name="nascita" required>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="modello">Modello Tesla:</label>
+      <select id="modello" name="modello" required>
+        <option value="" disabled selected>Seleziona il tuo modello</option>
+        <option value="Model 3">Model 3</option>
+        <option value="Model Y">Model Y</option>
+        <option value="Model S">Model S</option>
+        <option value="Model X">Model X</option>
+        <option value="Cybertruck">Cybertruck</option>
+        <option value="Altro">Altro / Roadster</option>
+      </select>
+    </div>
 
-        <div class="form-group">
-            <label for="km_tesla">Quanti KM ha la tua Tesla?</label>
-            <input type="number" id="km_tesla" name="km_tesla" required>
-        </div>
+    <div class="form-group" id="gruppo-altro">
+      <label for="modello_specifico">Specifica il modello:</label>
+      <input type="text" id="modello_specifico" name="modello_specifico" placeholder="Es. Roadster, Semi, ecc.">
+    </div>
 
-        <div class="form-group">
-            <label for="citta">Città di provenienza</label>
-            <select id="citta" name="citta" required>
-                <option value="">Seleziona la tua città...</option>
-                <option value="Milano" data-dist="40">Milano</option>
-                <option value="Torino" data-dist="110">Torino</option>
-                <option value="Pavia" data-dist="45">Pavia</option>
-                <option value="Novara" data-dist="30">Novara</option>
-                <option value="Genova" data-dist="140">Genova</option>
-            </select>
-        </div>
+    <div class="form-group">
+      <label for="targa">Targa del veicolo (solo i tre numeri centrali):</label>
+      <input type="text" id="targa" name="targa" placeholder="123" minlength="3" maxlength="3" pattern="\d{3}" required title="Inserisci esattamente 3 numeri da 000 a 999">
+    </div>
 
-        <div class="form-group">
-            <label>Km percorsi stimati per raggiungere Vigevano</label>
-            <div class="calc-container">
-                <input type="text" id="km_viaggio" name="km_viaggio" readonly placeholder="Clicca su Calcola...">
-                <button type="button" class="btn-calc" onclick="calcolaKm()">CALCOLA km percorsi</button>
-            </div>
-        </div>
+    <!-- CAMPO CITTÀ + PULSANTE CALCOLA DISTANZA -->
+    <div class="form-group">
+      <label for="citta">Città di provenienza:</label>
+      <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la tua città..." autocomplete="off" required>
+      <ul id="suggerimenti-citta" class="suggestions-list"></ul>
+      <button type="button" id="btn-calcola" class="btn-secondario">Calcola distanza</button>
+    </div>
 
-        <div class="row">
-            <div class="form-group">
-                <label for="modello">Modello della tua Tesla</label>
-                <select id="modello" name="modello" required>
-                    <option value="">Scegli modello...</option>
-                    <option value="Model S">Model S</option>
-                    <option value="Model 3">Model 3</option>
-                    <option value="Model X">Model X</option>
-                    <option value="Model Y">Model Y</option>
-                    <option value="Altro">Cybertruck / Altro</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="immatricolazione">Mese/Anno Immatricolazione</label>
-                <input type="month" id="immatricolazione" name="immatricolazione" required>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="distanza">Distanza stimata dal raduno (km):</label>
+      <input type="text" id="distanza" name="distanza" readonly placeholder="Clicca su 'Calcola distanza'" required>
+    </div>
 
-        <button type="submit" class="btn-submit">Conferma e Invia</button>
-    </form>
+    <button type="submit" class="btn-invia">Invia Registrazione</button>
+  </form>
 </div>
 
 <script>
-    function calcolaKm() {
-        const cittaSelect = document.getElementById('citta');
-        const selectedOption = cittaSelect.options[cittaSelect.selectedIndex];
-        const dist = selectedOption.getAttribute('data-dist');
-        
-        if (dist) {
-            document.getElementById('km_viaggio').value = dist + " KM";
-        } else {
-            alert("Seleziona prima una città di provenienza.");
-        }
-    }
+  // COORDINATE DEL RADUNO (Esempio: Milano. Modificabili)
+  const LAT_RADUNO = 45.4642;
+  const LON_RADUNO = 9.1900;
 
-    document.getElementById('registrationForm').submit(function(e) {
-        e.preventDefault();
-        // Qui si collegherà lo script di invio automatico ed elaborazione PDF
-        alert("Modulo pronto per l'invio!");
+  // Variabili temporanee per memorizzare le coordinate della città scelta
+  let cittaLat Selezionata = null;
+  let cittaLonSelezionata = null;
+
+  // --- GESTIONE CAMPO DINAMICO MODELLO ---
+  const selettoreModello = document.getElementById('modello');
+  const gruppoAltro = document.getElementById('gruppo-altro');
+  const inputSpecifico = document.getElementById('modello_specifico');
+
+  if (selettoreModello && gruppoAltro && inputSpecifico) {
+    selettoreModello.addEventListener('change', function() {
+      if (this.value === 'Altro') {
+        gruppoAltro.style.display = 'block';
+        inputSpecifico.setAttribute('required', 'true');
+      } else {
+        gruppoAltro.style.display = 'none';
+        inputSpecifico.removeAttribute('required');
+        inputSpecifico.value = '';
+      }
     });
-</script>
+  }
 
-</body>
-</html>
+  // --- FUNZIONE PER IL CALCOLO DELLA DISTANZA ---
+  function calcolaDistanzaKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round(R * c);
+  }
+
+  // --- GESTIONE RICERCA PREDITTIVA CITTÀ ---
+  const inputCitta = document.getElementById('citta');
+  const listaSuggerimenti = document.getElementById('suggerimenti-citta');
+  const inputDistanza = document.getElementById('distanza');
+  const btnCalcola = document.getElementById('btn-calcola');
+  let debounceTimer = null;
+
+  if (inputCitta && listaSuggerimenti) {
+    inputCitta.addEventListener('input', function() {
+      const testo = this.value.trim();
+      clearTimeout(debounceTimer);
+      
+      if (testo.length < 3) {
+        listaSuggerimenti.style.display = 'none';
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        const url = `https://komoot.io{encodeURIComponent(testo)}&lang=it&filter=osm:key:place&limit=6`;
+
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            listaSuggerimenti.innerHTML = '';
+            const localitaItaliane = data.features.filter(f => f.properties.countrycode === 'IT');
+            
+            if (localitaItaliane.length === 0) {
+              listaSuggerimenti.style.display = 'none';
+              return;
+            }
+
+            localitaItaliane.forEach(item => {
+              const prop = item.properties;
+              const nomeVisualizzato = prop.name + (prop.state ? `, ${prop.state}` : '');
+              
+              const li = document.createElement('li');
+              li.textContent = nomeVisualizzato;
+              
+              li.addEventListener('click', () => {
+                inputCitta.value = prop.name;
+                // Salviamo le coordinate geografiche della città scelta
+                cittaLonSelezionata = item.geometry.coordinates[0];
+                cittaLatSelezionata = item.geometry.coordinates[1];
+                listaSuggerimenti.style.display = 'none';
+                inputDistanza.value = ''; // Resetta il vecchio calcolo se cambia città
+              });
+              
+              listaSuggerimenti.appendChild(li);
+            });
+            
+            listaSuggerimenti.style.display = 'block';
+          })
+          .catch(err => console.error("Errore geografico:", err));
+      }, 350);
+    });
+
+    // Chiude la lista se si clicca fuori
+    document.addEventListener('click', function(e) {
+      if (e.target !== inputCitta) {
+        listaSuggerimenti.style.display = 'none';
+      }
+    });
+  }
+
+  // --- LOGICA DEL PULSANTE CALCOLA DISTANZA ---
+  if (btnCalcola) {
+    btnCalcola.addEventListener('click', function() {
+      if (cittaLatSelezionata && cittaLonSelezionata) {
+        const km = calcolaDistanzaKm(cittaLatSelezionata, cittaLonSelezionata, LAT_RADUNO, LON_RADUNO);
+        inputDistanza.value = `${km} km`;
