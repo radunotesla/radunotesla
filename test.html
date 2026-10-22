@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mappa e KM Tesla Raduno</title>
+    
+    <!-- 1. CARICAMENTO DELLE LIBRERIE REALI (FONDAMENTALI) -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <script src="https://unpkg.com"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; }
+        h2 { color: #cc0000; text-align: center; }
+        .box { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; }
+        button { background-color: #cc0000; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; border-radius: 5px; }
+        button:hover { background-color: #990000; }
+        
+        /* IL QUADRATO DELLA MAPPA */
+        #contenitore-mappa { 
+            height: 300px; 
+            width: 100%; 
+            margin-top: 20px; 
+            border: 3px solid #cc0000; 
+            border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🚗 Test Calcolo KM Stradali</h2>
+    
+    <div class="box">
+        <label>Città di provenienza:</label>
+        <input type="text" id="citta_provenienza" placeholder="Es. Milano, Torino, Roma...">
+    </div>
+
+    <button type="button" id="btn-calcola">CALCOLA km percorsi</button>
+
+    <div class="box" style="margin-top: 15px;">
+        <label>KM Stradali Risultanti:</label>
+        <input type="text" id="km_fatti" readonly placeholder="I KM appariranno qui...">
+    </div>
+
+    <!-- Il riquadro in cui si caricherà la mappa -->
+    <div id="contenitore-mappa"></div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAZIONE MAPPA E CALCOLO STRADALE
+        // ==========================================
+
+        // Coordinate fisse del Raduno (Campo Volo, Vigevano)
+        const latVigevano = 45.2974;
+        const lonVigevano = 8.8952;
+
+        // 1. INIZIALIZZA LA MAPPA SUBITO ALL'AVVIO
+        const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
+
+        // Carica la grafica stradale (CartoDB, super stabile)
+        L.tileLayer('https://{s}://{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Mette il segnaposto rosso sul punto di arrivo (Vigevano)
+        L.marker([latVigevano, lonVigevano]).addTo(map)
+            .bindPopup('<b>Arrivo Raduno Tesla</b><br>Vigevano')
+            .openPopup();
+
+        // Forza la mappa a disegnarsi correttamente sullo schermo
+        setTimeout(() => { map.invalidateSize(); }, 500);
+
+        // 2. FUNZIONE PER IL CALCOLO DEI KM STRADALI REALI
+        function calcolaDistanzaStradale() {
+            const cittaInviata = document.getElementById('citta_provenienza').value.trim();
+            
+            if (!cittaInviata) {
+                alert("Scrivi prima il nome di una città!");
+                return;
+            }
+
+            // Trasforma il nome della città in coordinate (Geocoding)
+            const urlGeocode = `https://openstreetmap.org{encodeURIComponent(cittaInviata)}`;
+
+            fetch(urlGeocode)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        alert("Città non trovata. Riprova a scriverla!");
+                        return;
+                    }
+
+                    const latPartenza = parseFloat(data[0].lat);
+                    const lonPartenza = parseFloat(data[0].lon);
+
+                    // Aggiunge un segnaposto sulla città di partenza trovata
+                    L.marker([latPartenza, lonPartenza]).addTo(map)
+                        .bindPopup(`<b>Partenza:</b> ${cittaInviata}`)
+                        .openPopup();
+                    
+                    // Inquadra entrambe le città sulla mappa
+                    map.setView([latPartenza, lonPartenza], 8);
+
+                    // Chiede al motore stradale (OSRM) il percorso effettivo per le auto
+                    const urlRouting = `https://project-osrm.org{lonPartenza},${latPartenza};${lonVigevano},${latVigevano}?overview=false`;
+
+                    return fetch(urlRouting);
+                })
+                .then(res => res.json())
+                .then(routingData => {
+                    if (!routingData || !routingData.routes || routingData.routes.length === 0) {
+                        alert("Impossibile trovare un percorso stradale.");
+                        return;
+                    }
+
+                    // Prende i metri reali del viaggio e li trasforma in KM arrotondati
+                    const metriReali = routingData.routes[0].distance;
+                    const kmArrotondati = Math.round(metriReali / 1000);
+
+                    // Scrive il numero nella casella di testo
+                    document.getElementById('km_fatti').value = kmArrotondati;
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Errore di connessione durante il calcolo.");
+                });
+        }
+
+        // Associa l'azione al click sul pulsante
+        document.getElementById('btn-calcola').addEventListener('click', calcolaDistanzaStradale);
+    </script>
+</body>
+</html>
