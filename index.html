@@ -270,44 +270,79 @@
     // ==========================================
     // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
     // ==========================================
-// --- AUTOCOMPLETE CITTÀ (DAL TUO SCREENSHOT CORRETTO) ---
+// --- AUTOCOMPLETE CITTÀ ULTRA-DIRETTO ---
 let debounce; 
 const inputCitta = document.getElementById('citta');
-const suggBox = document.getElementById('suggerimenti-citta');
+// Se l'elemento non esiste, usa come ripiego il primo contenitore di suggerimenti disponibile
+const suggBox = document.getElementById('suggerimenti-citta') || document.getElementById('sugg');
 
 if (inputCitta && suggBox) {
+  // Forza via codice gli stili della lista per assicurarci che sia sopra gli altri elementi
+  suggBox.style.position = 'absolute';
+  suggBox.style.zIndex = '9999';
+  suggBox.style.backgroundColor = '#ffffff';
+  suggBox.style.width = '100%';
+  suggBox.style.boxSizing = 'border-box';
+
   inputCitta.addEventListener('input', () => {
     clearTimeout(debounce);
     const q = inputCitta.value.trim();
-    if (q.length < 2) { suggBox.style.display = 'none'; return; }
+    if (q.length < 2) { 
+      suggBox.innerHTML = '';
+      suggBox.style.display = 'none'; 
+      return; 
+    }
     debounce = setTimeout(() => cercaCitta(q), 350);
   });
 }
 
 async function cercaCitta(q) {
   try {
-    const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
     const data = await res.json(); 
     suggBox.innerHTML = '';
     
-    data.forEach(p => {
-      const div = document.createElement('li'); 
-      div.textContent = p.display_name;
-      div.onclick = () => {
-        inputCitta.value = p.display_name.split(',').slice(0,2).join(',').trim();
-        document.getElementById('cittaLat').value = p.lat;
-        document.getElementById('cittaLon').value = p.lon;
-        suggBox.style.display = 'none';
-      };
-      suggBox.appendChild(div);
-    });
-    suggBox.style.display = data.length ? 'block' : 'none';
-  } catch(e) {}
+    if (data && data.length > 0) {
+      data.forEach(p => {
+        const li = document.createElement('li'); 
+        // Stile elementare per essere sicuri che i testi dei suggerimenti siano visibili e cliccabili
+        li.style.padding = '12px';
+        li.style.cursor = 'pointer';
+        li.style.color = '#333333';
+        li.style.listStyleType = 'none';
+        li.style.borderBottom = '1px solid #f0f0f0';
+        
+        li.textContent = p.display_name.split(',').slice(0,3).join(',').trim();
+        
+        li.onclick = () => {
+          inputCitta.value = p.display_name.split(',').slice(0,2).join(',').trim();
+          
+          // Assicura il salvataggio delle coordinate su qualsiasi ID sia presente nel file
+          const elLat = document.getElementById('cittaLat') || document.getElementById('lat');
+          const elLon = document.getElementById('cittaLon') || document.getElementById('lon');
+          if (elLat) elLat.value = p.lat;
+          if (elLon) elLon.value = p.lon;
+          
+          suggBox.innerHTML = '';
+          suggBox.style.display = 'none';
+        };
+        suggBox.appendChild(li);
+      });
+      suggBox.style.display = 'block';
+    } else {
+      suggBox.style.display = 'none';
+    }
+  } catch(e) {
+    suggBox.style.display = 'none';
+  }
 }
 
-// Chiusura al click esterno basata sul tuo form-group
+// Chiusura al click esterno
 document.addEventListener('click', (e) => {
-  if (suggBox && !e.target.closest('.form-group')) suggBox.style.display = 'none';
+  if (suggBox && !e.target.closest('.form-group')) {
+    suggBox.innerHTML = '';
+    suggBox.style.display = 'none';
+  }
 });
 
     // ==========================================
