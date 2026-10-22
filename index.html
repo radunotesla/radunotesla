@@ -231,78 +231,92 @@
 
   document.addEventListener("DOMContentLoaded", function() {
     
-    // --- 1. NUOVA LOGICA MASCHERA DATE (Funzionamento garantito al 100%) ---
-    function applicaMascheraData(inputEl, formato) {
-      inputEl.addEventListener('input', function(e) {
-        let cifra = e.target.value.replace(/\D/g, '');
-        let valoreFormattato = '';
-        
-        if (formato === 'gg/mm/aaaa') {
-          if (cifra.length > 8) cifra = cifra.slice(0, 8);
-          if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
-          if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 4);
-          if (cifra.length > 4) valoreFormattato += '/' + cifra.slice(4, 8);
-        } else if (formato === 'mm/aaaa') {
-          if (cifra.length > 6) cifra = cifra.slice(0, 6);
-          if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
-          if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 6);
-        }
-        e.target.value = valoreFormattato;
-      });
+// --- 1. LOGICA MASCHERA AUTOMATICA PER LE DATE ---
+function applicaMascheraData(inputEl, formato) {
+  inputEl.addEventListener('input', function(e) {
+    let cifra = e.target.value.replace(/\D/g, ''); // Rimuove lettere e simboli
+    let valoreFormattato = '';
+    
+    if (formato === 'gg/mm/aaaa') {
+      if (cifra.length > 8) cifra = cifra.slice(0, 8);
+      if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
+      if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 4);
+      if (cifra.length > 4) valoreFormattato += '/' + cifra.slice(4, 8);
+    } else if (formato === 'mm/aaaa') {
+      if (cifra.length > 6) cifra = cifra.slice(0, 6);
+      if (cifra.length > 0) valoreFormattato += cifra.slice(0, 2);
+      if (cifra.length > 2) valoreFormattato += '/' + cifra.slice(2, 6);
     }
+    e.target.value = valoreFormattato;
+  });
+}
 
-    applicaMascheraData(document.getElementById('data-nascita'), 'gg/mm/aaaa');
-    applicaMascheraData(document.getElementById('data-macchina'), 'mm/aaaa');
+// Attivazione della maschera sui due campi
+applicaMascheraData(document.getElementById('data-nascita'), 'gg/mm/aaaa');
+applicaMascheraData(document.getElementById('data-macchina'), 'mm/aaaa');
 
+// --- 2. LOGICA SUGGERIMENTI CITTÀ (AUTOCOMPLETE) ---
+const inputCitta = document.getElementById('citta');
+const suggBox = document.getElementById('suggerimenti-citta');
+let timeoutCerca = null;
 
-    // --- 2. RICERCA CITTA' CON SISTEMA DI SICUREZZA INTELLIGENTE ---
-    const inputCitta = document.getElementById('citta');
-    const suggBox = document.getElementById('suggerimenti-citta');
-    let timeoutCerca = null;
+// Ascolta la digitazione dell'utente
+inputCitta.addEventListener('input', () => {
+  clearTimeout(timeoutCerca);
+  const q = inputCitta.value.trim();
+  
+  // Mostra i suggerimenti solo se l'utente ha scritto almeno 3 lettere
+  if (q.length < 3) {
+    suggBox.style.display = 'none';
+    return;
+  }
+  
+  // Attende 300 millisecondi dall'ultima battuta prima di inviare la richiesta (evita blocchi del server)
+  timeoutCerca = setTimeout(() => cercaCitta(q), 300);
+});
 
-    inputCitta.addEventListener('input', () => {
-      clearTimeout(timeoutCerca);
-      const q = inputCitta.value.trim();
-      if (q.length < 3) {
-        suggBox.style.display = 'none';
-        return;
-      }
-      timeoutCerca = setTimeout(() => cercaCitta(q), 300);
+async function cercaCitta(q) {
+  try {
+    // Chiamata all'API Nominatim di OpenStreetMap limitata all'Italia e in lingua italiana
+    const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
+      headers: { 'Accept-Language': 'it' }
     });
-
-    async function cercaCitta(q){
-      try {
-        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
-          headers: { 'Accept-Language': 'it' }
-        });
-        const data = await res.json(); 
-        suggBox.innerHTML = '';
+    const data = await res.json(); 
+    suggBox.innerHTML = '';
+    
+    if (data && data.length > 0) {
+      data.forEach(p => {
+        const li = document.createElement('li');
         
-        if(data && data.length > 0) {
-          data.forEach(p => {
-            const li = document.createElement('li'); 
-            li.textContent = p.display_name.split(',').slice(0,3).join(',');
-            li.onclick = () => {
-              inputCitta.value = p.display_name.split(',')[0].trim();
-              document.getElementById('cittaLat').value = p.lat; 
-              document.getElementById('cittaLon').value = p.lon;
-              suggBox.style.display = 'none';
-            }; 
-            suggBox.appendChild(li);
-          }); 
-          suggBox.style.display = 'block';
-        } else {
-          suggBox.style.display = 'none';
-        }
-      } catch(e) {
-        // Se la rete blocca l'API, nascondiamo silenziosamente la lista ma lasciamo digitare
-        suggBox.style.display = 'none';
-      }
+        // Estrae le prime tre parti dell'indirizzo restituito (es: Milano, Lombardia, Italia)
+        const partiIndirizzo = p.display_name.split(',');
+        li.textContent = partiIndirizzo.slice(0, 3).join(',').trim();
+        
+        // Al click sul suggerimento, compila il campo principale e salva lat/lon nei campi nascosti
+        li.onclick = () => {
+          inputCitta.value = partiIndirizzo.slice(0, 2).join(',').trim(); // Mostra solo Comune, Provincia o Regione
+          document.getElementById('cittaLat').value = p.lat; 
+          document.getElementById('cittaLon').value = p.lon;
+          suggBox.style.display = 'none'; // Nasconde la lista
+        }; 
+        suggBox.appendChild(li);
+      }); 
+      suggBox.style.display = 'block'; // Mostra l'elenco a comparsa
+    } else {
+      suggBox.style.display = 'none';
     }
+  } catch(e) {
+    // In caso di errore o blocco di rete, nasconde i suggerimenti senza rompere il modulo
+    suggBox.style.display = 'none';
+  }
+}
 
-    document.addEventListener('click', (e) => { 
-      if(!e.target.closest('.form-group')) suggBox.style.display = 'none'; 
-    });
+// Chiude la tendina dei suggerimenti se l'utente clicca in un punto qualsiasi fuori dal form
+document.addEventListener('click', (e) => { 
+  if (!e.target.closest('.form-group')) {
+    suggBox.style.display = 'none'; 
+  }
+});
 
 
     // --- 3. CALCOLO KM STRADALI (Con Fallback di Sicurezza) ---
