@@ -3,31 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mappa e Percorso Raduno Tesla</title>
+    <title>Integrazione Mappa e Comuni Tesla</title>
     
-    <!-- 1. CARICAMENTO DELLE LIBRERIE MAPPA (CORRETTE E COMPLETE) -->
+    <!-- Link reali e completi alle librerie della mappa e del calcolo stradale -->
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
-
-    <!-- 2. CARICAMENTO DEL MOTORE DI PERCORSI STRADALI -->
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f9f9f9;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 15px;
-        }
-        h1 { color: #cc0000; }
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; padding: 15px; text-align: center; }
+        h2 { color: #cc0000; }
         .form-group { position: relative; margin-bottom: 15px; text-align: left; }
         label { font-weight: bold; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
         
-        /* Pannello dei suggerimenti delle città */
+        /* Struttura della lista dei suggerimenti del tuo codice giallo */
         #suggerimenti-citta {
             position: absolute;
             border: 1px solid #ccc;
@@ -38,145 +29,147 @@
             right: 0;
             max-height: 200px;
             overflow-y: auto;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-            display: none;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
         }
-        
+
         button { background-color: #cc0000; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; }
         button:hover { background-color: #990000; }
 
-        /* Riquadro della mappa */
-        #map-container {
+        /* Fissiamo l'altezza qui nel CSS: impedisce a Leaflet di mandare in crash la pagina */
+        #contenitore-mappa {
             width: 100%;
-            height: 400px;
+            height: 350px !important;
             margin-top: 20px;
-            border-radius: 8px;
             border: 2px solid #cc0000;
-            background-color: #eee;
+            border-radius: 6px;
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
 
-    <h1>🚗 Calcolo Itinerario Tesla</h1>
-    <p>Scegli la città per vedere il percorso stradale reale fino al raduno.</p>
+    <h2>🚗 Test Modulo Stradale Tesla</h2>
 
     <div class="form-group">
         <label>CITTÀ DI PROVENIENZA:</label>
-        <input type="text" id="citta" placeholder="Inizia a scrivere (es. Monguzzo, Milano...)" autocomplete="off">
-        <div id="suggerimenti-citta"></div>
+        <input type="text" id="citta" placeholder="Inizia a scrivere (es. Monguzzo...)" autocomplete="off">
+        <!-- Contenitore della lista (ID usato nel tuo script giallo) -->
+        <ul id="suggerimenti-citta"></ul>
     </div>
 
-    <button type="button" id="btn-calcola">CALCOLA PERCORSO E KM</button>
+    <button type="button" id="btn-calcola">CALCOLA KM PERCORSI</button>
 
     <div class="form-group" style="margin-top: 15px;">
         <label>KM REALI SU STRADA:</label>
-        <input type="text" id="km_fatti" readonly placeholder="I chilometri stradali appariranno qui...">
+        <input type="text" id="km_fatti" readonly placeholder="I KM appariranno qui...">
     </div>
 
-    <!-- Campi nascosti per memorizzare le coordinate di partenza -->
+    <!-- Campi nascosti per memorizzare le coordinate recuperate dall'autocomplete -->
     <input type="hidden" id="cittaLat">
     <input type="hidden" id="cittaLon">
 
-    <!-- La Mappa -->
-    <div id="map-container"></div>
+    <!-- Il riquadro in cui si genera la mappa stradale -->
+    <div id="contenitore-mappa"></div>
 
     <script>
         // Coordinate fisse del Raduno (Campo Volo, Vigevano)
         const latVigevano = 45.2974;
         const lonVigevano = 8.8952;
 
-        // 3. INIZIALIZZA LA MAPPA CENTRATA SU VIGEVANO
-        const map = L.map('map-container').setView([latVigevano, lonVigevano], 10);
+        // 1. INIZIALIZZAZIONE SICURA DELLA MAPPA
+        const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 11);
 
-        // 4. AGGIUNGI LA GRAFICA STRADALE DI OPENSTREETMAP
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Aggiunge un marker sul punto di arrivo fisso
-        const markerArrivo = L.marker([latVigevano, lonVigevano]).addTo(map)
-            .bindPopup("<b>Traguardo Raduno Tesla</b><br>Vigevano")
-            .openPopup();
+        // Segnaposto di arrivo su Vigevano
+        L.marker([latVigevano, lonVigevano]).addTo(map).bindPopup('<b>Raduno Tesla</b><br>Arrivo').openPopup();
 
-        // 5. CONFIGURA IL MOTORE DI RICERCA PERCORSI (Inizialmente vuoto)
+        // 2. CONFIGURAZIONE MOTORE DI ITINERARI (Risolve il problema del calcolo stradale)
         const routingControl = L.Routing.control({
             waypoints: [],
             language: 'it',
-            createMarker: function() { return null; }, // Evita marker doppi brutti sulla mappa
+            createMarker: function() { return null; }, // Nasconde i marker doppi generati dal motore
             lineOptions: {
-                styles: [{ color: '#cc0000', weight: 5 }] // Disegna la linea stradale in rosso Tesla
+                styles: [{ color: '#cc0000', weight: 5 }] // Linea rossa del percorso
             },
-            show: false // Nasconde il pannello di testo con le svolte a destra/sinistra per pulizia
+            show: false // Nasconde i testi con l'elenco delle curve
         }).addTo(map);
 
-        // Quando il motore trova la strada, legge i KM e li mette nella casella di testo
+        // Quando il motore calcola la strada, estrae la distanza e la scrive nell'input dei KM
         routingControl.on('routesfound', function(e) {
-            const routes = e.routes;
-            const summary = routes[0].summary;
-            const kmStradali = Math.round(summary.totalDistance / 1000);
-            document.getElementById('km_fatti').value = kmStradali;
+            const percorso = e.routes[0];
+            const kmArrotondati = Math.round(percorso.summary.totalDistance / 1000);
+            document.getElementById('km_fatti').value = kmArrotondati;
         });
 
 
         // ========================================================
-        // 6. LOGICA AUTOCOMPLETE (IL TUO CODICE DEL COMUNE)
+        // 3. LOGICA REALE DEL TUO CODICE GIALLO (AUTOCAMPLETAMENTO)
         // ========================================================
         let debounce;
         const inputCitta = document.getElementById('citta');
         const suggBox = document.getElementById('suggerimenti-citta');
 
-        inputCitta.addEventListener('input', () => {
-            clearTimeout(debounce);
-            const q = inputCitta.value.trim();
-            if (q.length < 2) {
-                suggBox.innerHTML = '';
-                suggBox.style.display = 'none';
-                return;
-            }
-            debounce = setTimeout(() => cercaCitta(q), 350);
-        });
+        if (inputCitta && suggBox) {
+            inputCitta.addEventListener('input', () => {
+                clearTimeout(debounce);
+                const q = inputCitta.value.trim();
+                if (q.length < 2) {
+                    suggBox.innerHTML = '';
+                    suggBox.style.display = 'none';
+                    return;
+                }
+                debounce = setTimeout(() => cercaCitta(q), 350);
+            });
+        }
 
         async function cercaCitta(q) {
             try {
-                const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
                 const data = await res.json();
                 suggBox.innerHTML = '';
 
                 if (data && data.length > 0) {
                     suggBox.style.display = 'block';
                     data.forEach(p => {
-                        const divCitta = document.createElement('div');
+                        const li = document.createElement('li');
                         
-                        divCitta.style.padding = '12px';
-                        divCitta.style.cursor = 'pointer';
-                        divCitta.style.color = '#333333';
-                        divCitta.style.borderBottom = '1px solid #f0f0f0';
-                        divCitta.style.backgroundColor = '#ffffff';
+                        // Stili per rendere i suggerimenti chiaramente leggibili e cliccabili
+                        li.style.padding = '12px';
+                        li.style.cursor = 'pointer';
+                        li.style.color = '#333333';
+                        li.style.backgroundColor = '#ffffff';
+                        li.style.borderBottom = '1px solid #f0f0f0';
 
                         const nomePulito = p.display_name.split(',').slice(0,3).join(',').trim();
-                        divCitta.textContent = nomePulito;
+                        li.textContent = nomePulito;
 
-                        divCitta.onclick = () => {
+                        li.onclick = () => {
                             inputCitta.value = nomePulito;
+
+                            // Salva i dati geografici per il calcolo stradale
                             document.getElementById('cittaLat').value = p.lat;
                             document.getElementById('cittaLon').value = p.lon;
+
                             suggBox.innerHTML = '';
                             suggBox.style.display = 'none';
                         };
                         
-                        suggBox.appendChild(divCitta);
+                        suggBox.appendChild(li);
                     });
                 } else {
                     suggBox.style.display = 'none';
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Errore autocomplete:", err);
             }
         }
 
-        // Chiude la tendina se si clicca altrove nella pagina
+        // Chiude i suggerimenti se l'utente clicca fuori dalla casella
         document.addEventListener('click', function(e) {
             if (e.target !== inputCitta) {
                 suggBox.style.display = 'none';
@@ -185,21 +178,21 @@
 
 
         // ========================================================
-        // 7. ATTIVAZIONE DEL PERCORSO AL CLICK SUL BOTTONE
+        // 4. ATTIVAZIONE TRAGITTO AL CLICK SUL BOTTONE
         // ========================================================
         document.getElementById('btn-calcola').addEventListener('click', function() {
             const latP = document.getElementById('cittaLat').value;
             const lonP = document.getElementById('cittaLon').value;
 
             if (!latP || !lonP) {
-                alert("Per favore, digita la città e selezionala dal menu a tendina!");
+                alert("Per favore, digita la tua città e selezionala dal menu che appare!");
                 return;
             }
 
-            // Calcola e disegna la linea del percorso stradale reale sulla mappa
+            // Invia le coordinate al motore stradale che disegna il tragitto e aggiorna la casella dei KM
             routingControl.setWaypoints([
-                L.latLng(parseFloat(latP), parseFloat(lonP)), // Partenza scelta dall'utente
-                L.latLng(latVigevano, lonVigevano)            // Arrivo fisso a Vigevano
+                L.latLng(parseFloat(latP), parseFloat(lonP)), // Partenza (es. Monguzzo)
+                L.latLng(latVigevano, lonVigevano)            // Arrivo (Vigevano)
             ]);
         });
     </script>
