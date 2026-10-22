@@ -3,160 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Completo Autocomplete e Mappa Tesla</title>
+    <title>Test Integrazione Tesla</title>
     
-    <!-- Librerie per la Mappa Standard -->
+    <!-- Librerie per la Mappa e lo Stile Grafico (Infallibili) -->
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
 
     <style>
         body { font-family: Arial, sans-serif; max-width: 450px; margin: 20px auto; padding: 15px; }
         h2 { color: #cc0000; text-align: center; }
-        .autocomplete-container { position: relative; margin-bottom: 10px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; }
+        .form-group { position: relative; margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; font-size: 16px; border: 1px solid #ccc; }
         
-        /* Stile grafico del menu a tendina delle città */
-        .autocomplete-items {
+        /* Contenitore per i suggerimenti delle città */
+        #suggerimenti-citta {
             position: absolute;
             border: 1px solid #d4d4d4;
-            border-bottom: none;
-            border-top: none;
-            z-index: 99;
+            background-color: #ffffff;
+            z-index: 9999;
             top: 100%;
             left: 0;
             right: 0;
-            background-color: #fff;
             max-height: 200px;
             overflow-y: auto;
-        }
-        .autocomplete-items div {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #d4d4d4;
-        }
-        .autocomplete-items div:hover {
-            background-color: #e9e9e9;
+            box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+            display: none;
         }
         
         button { background-color: #cc0000; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 10px; font-size: 16px; }
         button:hover { background-color: #990000; }
-        #contenitore-mappa { height: 280px; width: 100%; margin-top: 15px; border: 2px solid #cc0000; background-color: #ddd; }
+        
+        /* Riquadro Mappa */
+        #contenitore-mappa { 
+            height: 300px; 
+            width: 100%; 
+            margin-top: 20px; 
+            border: 2px solid #cc0000; 
+            background-color: #eee; 
+        }
     </style>
 </head>
 <body>
 
-    <h2>🚗 Test Menu Città + Mappa</h2>
+    <h2>🚗 Test Modulo Tesla</h2>
     
-    <label><b>Città di provenienza (Inizia a scrivere...):</b></label>
-    <div class="autocomplete-container">
-        <input type="text" id="citta_provenienza" placeholder="Es. Milano, Torino...">
-        <div id="autocomplete-list" class="autocomplete-items"></div>
+    <div class="form-group">
+        <label>CITTÀ DI PROVENIENZA:</label>
+        <!-- Casella di testo usando l'ID "citta" dal tuo codice originale -->
+        <input type="text" id="citta" placeholder="Inizia a scrivere la città..." autocomplete="off">
+        <!-- Il riquadro dei suggerimenti dal tuo codice originale -->
+        <div id="suggerimenti-citta"></div>
     </div>
 
-    <!-- Coordinate nascoste salvate quando clicchi sul menu a tendina -->
-    <input type="hidden" id="lat_partenza">
-    <input type="hidden" id="lon_partenza">
+    <button type="button" id="btn-calcola">CALCOLA km percorsi</button>
 
-    <button type="button" id="btn-calcola">CALCOLA KM STRADALI</button>
+    <div class="form-group" style="margin-top: 15px;">
+        <label>KM PERCORSI FINO A VIGEVANO:</label>
+        <input type="text" id="km_fatti" readonly placeholder="I KM appariranno qui...">
+    </div>
 
-    <p><b>Risultato KM:</b> <span id="risultato-km" style="color: blue; font-size: 18px; font-weight: bold;">0</span> KM</p>
+    <!-- Campi nascosti per salvare latitudine e longitudine della partenza -->
+    <input type="hidden" id="cittaLat">
+    <input type="hidden" id="cittaLon">
 
-    <!-- Riquadro Mappa -->
+    <!-- Il quadrato della mappa stradale -->
     <div id="contenitore-mappa"></div>
 
     <script>
-        // Coordinate fisse del Raduno (Campo Volo, Vigevano)
+        // ========================================================
+        // CONFIGURAZIONE PUNTO DI ARRIVO (VIGEVANO) E MAPPA
+        // ========================================================
         const latVigevano = 45.2974;
         const lonVigevano = 8.8952;
 
-        // 1. INIZIALIZZAZIONE DELLA MAPPA SULLO SCHERMO
-        const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 12);
+        // Inizializza la mappa centrata sul raduno
+        const map = L.map('contenitore-mappa').setView([latVigevano, lonVigevano], 13);
 
-        // Caricamento dei tasselli grafici di OpenStreetMap
+        // Carica la grafica stradale standard
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Segnaposto rosso su Vigevano
-        L.marker([latVigevano, lonVigevano]).addTo(map).bindPopup('Raduno Tesla 2026').openPopup();
+        // Mette il segnaposto fisso su Vigevano
+        L.marker([latVigevano, lonVigevano]).addTo(map)
+            .bindPopup('<b>Raduno Tesla 2026</b><br>Vigevano')
+            .openPopup();
 
-        // Forza il browser a togliere il grigio e disegnare la mappa
-        setTimeout(() => { map.invalidateSize(); }, 800);
+        // Forza la mappa a disegnarsi correttamente senza blocchi grigi
+        setTimeout(() => { map.invalidateSize(); }, 600);
 
-        // 2. LOGICA DEL MENU A TENDINA AUTOMATICO (AUTOCOMPLETE)
-        const inputCitta = document.getElementById('citta_provenienza');
-        const listaAutocomplete = document.getElementById('autocomplete-list');
-        let timeoutId;
 
-        inputCitta.addEventListener('input', function() {
-            const query = this.value.trim();
-            listaAutocomplete.innerHTML = ''; // Svuota la tendina precedente
-            
-            if (query.length < 3) return; // Parte solo dopo 3 lettere scritte
+        // ========================================================
+        // BLOCCO 2: LOGICA AUTOCOMPLETE (IL TUO CODICE GIALLO CORRETTO)
+        // ========================================================
+        let debounce;
+        const inputCitta = document.getElementById('citta');
+        const suggBox = document.getElementById('suggerimenti-citta');
 
-            // Aspetta un istante prima di chiamare il server (evita blocchi)
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                fetch(`https://openstreetmap.org{encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        listaAutocomplete.innerHTML = '';
-                        data.forEach(item => {
-                            const elementoDellaLista = document.createElement('div');
-                            // Mostra il nome completo ordinato (es. Milano, Lombardia, Italia)
-                            elementoDellaLista.innerHTML = item.display_name;
+        if (inputCitta && suggBox) {
+            inputCitta.addEventListener('input', () => {
+                clearTimeout(debounce);
+                const q = inputCitta.value.trim();
+                if (q.length < 2) {
+                    suggBox.innerHTML = '';
+                    suggBox.style.display = 'none';
+                    return;
+                }
+                debounce = setTimeout(() => cercaCitta(q), 350);
+            });
+        }
+
+        async function cercaCitta(q) {
+            try {
+                const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
+                const data = await res.json();
+                suggBox.innerHTML = '';
+
+                if (data && data.length > 0) {
+                    suggBox.style.display = 'block';
+                    data.forEach(p => {
+                        const li = document.createElement('div');
+                        
+                        // Stile per rendere visibili e cliccabili i suggerimenti
+                        li.style.padding = '12px';
+                        li.style.cursor = 'pointer';
+                        li.style.color = '#333333';
+                        li.style.backgroundColor = '#ffffff';
+                        li.style.borderBottom = '1px solid #f0f0f0';
+
+                        const nomePulito = p.display_name.split(',').slice(0,3).join(',').trim();
+                        li.textContent = nomePulito;
+
+                        li.onclick = () => {
+                            inputCitta.value = nomePulito;
+
+                            // Salva le coordinate nei campi nascosti
+                            const elLat = document.getElementById('cittaLat');
+                            const elLon = document.getElementById('cittaLon');
                             
-                            // Quando l'utente clicca sulla città nella tendina
-                            elementoDellaLista.addEventListener('click', function() {
-                                inputCitta.value = item.name; // Inserisce il nome pulito nell'input
-                                document.getElementById('lat_partenza').value = item.lat; // Salva la latitudine
-                                document.getElementById('lon_partenza').value = item.lon; // Salva la longitudine
-                                listaAutocomplete.innerHTML = ''; // Chiude la tendina
-                            });
-                            listaAutocomplete.appendChild(elementoDellaLista);
-                        });
-                    });
-            }, 300);
-        });
+                            if (elLat) elLat.value = p.lat;
+                            if (elLon) elLon.value = p.lon;
 
-        // Chiude il menu se l'utente clicca fuori dalla tendina
+                            suggBox.innerHTML = '';
+                            suggBox.style.display = 'none';
+                        };
+                        
+                        suggBox.appendChild(li);
+                    });
+                } else {
+                    suggBox.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Errore autocomplete:", err);
+            }
+        }
+
+        // Chiude la tendina se si clicca fuori dalla casella
         document.addEventListener('click', function(e) {
             if (e.target !== inputCitta) {
-                listaAutocomplete.innerHTML = '';
+                suggBox.style.display = 'none';
             }
         });
 
-        // 3. LOGICA DEL CALCOLO DEI KM STRADALI REALI
-        document.getElementById('btn-calcola').addEventListener('click', function() {
-            const latP = document.getElementById('lat_partenza').value;
-            const lonP = document.getElementById('lon_partenza').value;
 
-            // Se l'utente non ha usato il menu a tendina per scegliere la città
+        // ========================================================
+        // BLOCCO 3: CALCOLO STRADALE KM (OSRM API)
+        // ========================================================
+        document.getElementById('btn-calcola').addEventListener('click', function() {
+            const latP = document.getElementById('cittaLat').value;
+            const lonP = document.getElementById('cittaLon').value;
+
             if (!latP || !lonP) {
-                alert("Per favore, scrivi la città e selezionala dal menu a tendina apparso sotto!");
+                alert("Per favore, digita la tua città e selezionala dall'elenco che appare!");
                 return;
             }
 
-            // Inquadra la partenza sulla mappa
+            // Muove la mappa per mostrare la città di partenza dell'utente
             map.setView([parseFloat(latP), parseFloat(lonP)], 8);
             L.marker([parseFloat(latP), parseFloat(lonP)]).addTo(map).bindPopup('La tua partenza').openPopup();
 
-            // Calcola il percorso stradale reale su vie automobilistiche (API OSRM)
+            // Calcola il percorso sulle strade reali
             fetch(`https://project-osrm.org{lonP},${latP};${lonVigevano},${latVigevano}?overview=false`)
                 .then(res => res.json())
                 .then(routing => {
                     if (!routing || !routing.routes || routing.routes.length === 0) {
-                        alert("Impossibile calcolare il percorso stradale.");
+                        alert("Impossibile calcolare la distanza stradale.");
                         return;
                     }
-                    
-                    // Converte i metri in KM stradali reali arrotondati
-                    const km = Math.round(routing.routes[0].distance / 1000);
-                    document.getElementById('risultato-km').innerText = km;
+                    // Converte i metri stradali in chilometri arrotondati
+                    const km = Math.round(routing.routes.distance / 1000);
+                    document.getElementById('km_fatti').value = km;
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("Errore nel calcolo del tragitto stradale.");
+                    alert("Errore durante il calcolo del tragitto stradale.");
                 });
         });
     </script>
