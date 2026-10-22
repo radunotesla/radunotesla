@@ -1,3 +1,381 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrazione Raduno Tesla
+<!-- Librerie per il calcolo stradale integrato -->
+<link rel="stylesheet" href="https://unpkg.com" />
+<link rel="stylesheet" href="https://unpkg.com" />
+<script src="https://unpkg.com"></script>
+<script src="https://unpkg.com"></script>
+
+</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f4f7;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 600px;
+      box-sizing: border-box;
+    }
+    .header-evento {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
+    }
+    .header-evento h1 {
+      font-size: 28px;
+      margin: 0;
+      letter-spacing: 2px;
+    }
+    .header-evento h2 {
+      font-size: 32px;
+      color: #cc0000;
+      margin: 5px 0;
+    }
+    .header-evento p {
+      margin: 5px 0;
+      font-size: 15px;
+    }
+    .sezione-titolo {
+      background-color: #eaeaea;
+      text-align: center;
+      padding: 8px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    input[type="text"], input[type="email"], input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 15px;
+      background-color: #fff;
+    }
+    input:focus {
+      outline: none;
+      border-color: #cc0000;
+    }
+    input[readonly] {
+      background-color: #f0f0f0;
+      color: #333;
+      cursor: not-allowed;
+      font-weight: bold;
+    }
+    .suggestions-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 0 0 6px 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .suggestions-list li {
+      padding: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      background-color: #ffffff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .suggestions-list li:hover {
+      background-color: #f5f5f5;
+    }
+    .btn-secondario {
+      width: 100%;
+      padding: 12px;
+      background-color: #555;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    .btn-secondario:hover {
+      background-color: #333;
+    }
+    .btn-invia {
+      width: 100%;
+      padding: 15px;
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 25px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+    .btn-invia:hover {
+      background-color: #a30000;
+    }
+
+/* Box mappa integrato fisso sotto il pulsante */
+#contenitore-mappa {
+  width: 100%;
+  height: 0px; /* Parte a zero e si allarga solo quando calcola */
+  border-radius: 8px;
+  margin-top: 0px;
+  display: block;
+  overflow: hidden;
+  transition: height 0.4s ease, margin-top 0.4s ease;
+}
+
+/* Nasconde le tabelle testuali con le direzioni di svolta */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+
+  <div class="header-evento">
+    <h1>RADUNO 2</h1>
+    <h2>TESLA</h2>
+    <p><strong>SABATO 24 OTTOBRE 2026</strong></p>
+    <p><em>Dalle 15:00 Fino Al Tramonto</em></p>
+    <p style="margin-top: 10px; font-size: 13px; color: #555;">CAMPO VOLO LEONARDO DA VINCI<br>STRADA SCOGLIO 27029 VIGEVANO (PV)</p>
+  </div>
+
+  <div class="sezione-titolo">Modulo di Registrazione</div>
+
+  <form id="modulo-raduno">
+
+    <div class="form-group">
+      <label for="nome">NOME:</label>
+      <input type="text" id="nome" name="nome" placeholder="Inserisci il tuo nome" required>
+    </div>
+
+    <div class="form-group">
+      <label for="cognome">COGNOME:</label>
+      <input type="text" id="cognome" name="cognome" placeholder="Inserisci il tuo cognome" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">MAIL (Obbligatoria con carattere @):</label>
+      <input type="email" id="email" name="email" placeholder="esempio@email.com" required>
+    </div>
+
+    <div class="form-group">
+      <label for="targa">TARGA - SOLO I TRE NUMERI CENTRALI:</label>
+      <input type="text" id="targa" name="targa" placeholder="123" minlength="3" maxlength="3" pattern="\d{3}" required title="Inserisci esattamente 3 numeri da 000 a 999">
+    </div>
+
+    <div class="form-group">
+      <label for="data-nascita">DATA DI NASCITA:</label>
+<!-- Campo Data di Nascita ottimizzato per Mobile -->
+<input type="text" id="data-nascita" name="data_nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="[0-9]*" required>
+    </div>
+
+    <div class="form-group">
+      <label for="km_tesla">QUANTI KM HA LA TUA TESLA?</label>
+      <input type="number" id="km_tesla" name="km_tesla" placeholder="Es. 45000" min="0" required>
+    </div>
+
+    <div class="form-group">
+      <label for="citta">CITTA' DI PROVENIENZA (SOLO CITTA', NON INDIRIZZO):</label>
+      <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la città..." autocomplete="off" required>
+      <ul id="suggerimenti-citta" class="suggestions-list"></ul>
+<button type="button" id="btn-calcola" class="btn-secondario">CALCOLA km percorsi</button>
+
+<!-- Il div in cui si caricherà visivamente il percorso stradale -->
+<div id="contenitore-mappa"></div>
+
+      <input type="hidden" id="cittaLat">
+      <input type="hidden" id="cittaLon">
+    </div>
+
+    <div class="form-group">
+      <label for="distanza">PER IL TUO VIAGGIO FINO A QUI (strada scoglio 27029 vigevano (Pavia)) HAI FATTO KM:</label>
+      <input type="text" id="distanza" name="distanza" readonly placeholder="Clicca su 'CALCOLA km percorsi'" required>
+    </div>
+
+    <div class="form-group">
+      <label for="modello">INDICA IL MODELLO DELLA TUA TESLA:</label>
+      <input type="text" id="modello" name="modello" placeholder="Es. Model 3 Long Range" required>
+    </div>
+
+    <div class="form-group">
+      <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
+<!-- Campo Data Macchina ottimizzato per Mobile -->
+<input type="text" id="data-macchina" name="data_macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="[0-9]*" required>
+    </div>
+
+    <button type="submit" class="btn-invia">CONFERMA E INVIA</button>
+  </form>
+</div>
+
+
+<script>
+  // Coordinate precise del raduno (Strada Scoglio, Vigevano)
+  const LAT_RADUNO = 45.3045; 
+  const LON_RADUNO = 8.8702;
+  const KEY = 'tesla_evento_dati';
+
+  // Attende che la pagina sia completamente caricata dal browser
+  document.addEventListener("DOMContentLoaded", function() {
+    
+    // ==========================================
+    // 1. LOGICA MASCHERA AUTOMATICA PER LE DATE
+    // ==========================================
+    const inputNascita = document.getElementById('data-nascita');
+    if (inputNascita) {
+      inputNascita.addEventListener('input', function(e) {
+        let v = this.value.replace(/\D/g, ''); // Rimuove tutto ciò che non è un numero
+        if (v.length > 8) v = v.slice(0, 8); 
+        if (v.length > 4) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+        } else if (v.length > 2) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2);
+        } else {
+          this.value = v;
+        }
+      });
+    }
+
+    const inputMacchina = document.getElementById('data-macchina');
+    if (inputMacchina) {
+      inputMacchina.addEventListener('input', function(e) {
+        let v = this.value.replace(/\D/g, ''); 
+        if (v.length > 6) v = v.slice(0, 6); 
+        if (v.length > 2) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2);
+        } else {
+          this.value = v;
+        }
+      });
+    }
+
+    // ==========================================
+    // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
+    // ==========================================
+// --- AUTOCOMPLETE CITTÀ ULTRA-DIRETTO ---
+let debounce; 
+const inputCitta = document.getElementById('citta');
+// Se l'elemento non esiste, usa come ripiego il primo contenitore di suggerimenti disponibile
+const suggBox = document.getElementById('suggerimenti-citta') || document.getElementById('sugg');
+
+if (inputCitta && suggBox) {
+  // Forza via codice gli stili della lista per assicurarci che sia sopra gli altri elementi
+  suggBox.style.position = 'absolute';
+  suggBox.style.zIndex = '9999';
+  suggBox.style.backgroundColor = '#ffffff';
+  suggBox.style.width = '100%';
+  suggBox.style.boxSizing = 'border-box';
+
+  inputCitta.addEventListener('input', () => {
+    clearTimeout(debounce);
+    const q = inputCitta.value.trim();
+    if (q.length < 2) { 
+      suggBox.innerHTML = '';
+      suggBox.style.display = 'none'; 
+      return; 
+    }
+    debounce = setTimeout(() => cercaCitta(q), 350);
+  });
+}
+
+async function cercaCitta(q) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}&countrycodes=it&addressdetails=1`);
+    const data = await res.json(); 
+    suggBox.innerHTML = '';
+    
+    if (data && data.length > 0) {
+      data.forEach(p => {
+        const li = document.createElement('li'); 
+        // Stile elementare per essere sicuri che i testi dei suggerimenti siano visibili e cliccabili
+        li.style.padding = '12px';
+        li.style.cursor = 'pointer';
+        li.style.color = '#333333';
+        li.style.listStyleType = 'none';
+        li.style.borderBottom = '1px solid #f0f0f0';
+        
+        li.textContent = p.display_name.split(',').slice(0,3).join(',').trim();
+        
+        li.onclick = () => {
+          inputCitta.value = p.display_name.split(',').slice(0,2).join(',').trim();
+          
+          // Assicura il salvataggio delle coordinate su qualsiasi ID sia presente nel file
+          const elLat = document.getElementById('cittaLat') || document.getElementById('lat');
+          const elLon = document.getElementById('cittaLon') || document.getElementById('lon');
+          if (elLat) elLat.value = p.lat;
+          if (elLon) elLon.value = p.lon;
+          
+          suggBox.innerHTML = '';
+          suggBox.style.display = 'none';
+        };
+        suggBox.appendChild(li);
+      });
+      suggBox.style.display = 'block';
+    } else {
+      suggBox.style.display = 'none';
+    }
+  } catch(e) {
+    suggBox.style.display = 'none';
+  }
+}
+
+// Chiusura al click esterno
+document.addEventListener('click', (e) => {
+  if (suggBox && !e.target.closest('.form-group')) {
+    suggBox.innerHTML = '';
+    suggBox.style.display = 'none';
+  }
+});
+
+    // ==========================================
+    // 3. LOGICA CALCOLO DISTANZA (KM)
+    // ==========================================
 // --- LOGICA INTEGRATA PER PERCORSO STRADALE REALE INLINE ---
 let mapInstance = null;
 let routingControl = null;
@@ -71,3 +449,41 @@ document.getElementById('btn-calcola').addEventListener('click', function() {
 
   }, 200); // Micro-ritardo di 200ms per garantire la corretta visualizzazione delle mappe
 });
+
+    // ==========================================
+    // 4. INVIO E SALVATAGGIO DEI DATI
+    // ==========================================
+    const modulo = document.getElementById('modulo-raduno');
+    if (modulo) {
+      modulo.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const nuovaRegistrazione = {
+          nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
+          cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
+          email: document.getElementById('email') ? document.getElementById('email').value : '',
+          targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
+          data_nascita: inputNascita ? inputNascita.value : '',
+          km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
+          citta: inputCitta ? inputCitta.value : '',
+          distanza_raduno: document.getElementById('distanza') ? document.getElementById('distanza').value : '',
+          modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
+          data_tesla: inputMacchina ? inputMacchina.value : '',
+          timestamp: new Date().toISOString()
+        };
+
+        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
+        datiAttuali.push(nuovaRegistrazione);
+        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+
+        alert("Registrazione effettuata con successo!");
+        modulo.reset();
+        if (document.getElementById('distanza')) document.getElementById('distanza').value = '';
+      });
+    }
+
+  });
+</script>
+</body>
+</html>
+
