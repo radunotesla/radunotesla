@@ -255,6 +255,14 @@
 </div>
 
 
+<!-- Schermata di riepilogo prima dell'invio definitivo -->
+<div id="riepilogo-invio" style="display: none; margin-top: 25px; padding: 20px; border: 2px dashed #333; border-radius: 8px; background-color: #fafafa;">
+  <h3 style="text-align: center; color: #cc0000; margin-top: 0;">RIEPILOGO DATI REGISTRAZIONE</h3>
+  <div id="dati-riepilogo" style="font-family: monospace; font-size: 14px; line-height: 1.6; margin-bottom: 20px;"></div>
+  <button type="button" id="btn-conferma-email" class="btn-invia" style="margin-top: 0; background-color: #28a745;">SÌ, CONFERMA INVIO - CLICCA E INVIA</button>
+</div>
+
+
 <script>
   // Coordinate precise del raduno (Strada Scoglio, Vigevano)
   const LAT_RADUNO = 45.3045; 
@@ -275,19 +283,26 @@ let routingControl = null;
 document.addEventListener("DOMContentLoaded", function() {
   console.log("Modulo Tesla pronto!");
 
-  // Inizializza subito la mappa visibile centrata sul raduno a Vigevano
-  mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(mapInstance);
+  // Avviamo la mappa dentro un micro-ritardo per dare tempo alla grafica della pagina di stabilizzarsi
+  setTimeout(function() {
+    if (!mapInstance) {
+      mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstance);
 
-  // Aggiunge un marker rosso provvisorio sul punto del raduno
-  L.marker([LAT_RADUNO, LON_RADUNO]).addTo(mapInstance)
-    .bindPopup('<b>Raduno Tesla</b><br>Campo Volo Leonardo da Vinci')
-    .openPopup();
+      // Forza il browser a ridisegnare i tasselli della mappa se erano rimasti grigi/bianchi
+      mapInstance.invalidateSize();
+
+      // Aggiunge il marker sul punto del raduno
+      L.marker([LAT_RADUNO, LON_RADUNO]).addTo(mapInstance)
+        .bindPopup('<b>Raduno Tesla</b><br>Campo Volo Leonardo da Vinci')
+        .openPopup();
+    }
+  }, 200); // Ritardo invisibile di 200 millisecondi
 
     // ==========================================
-    // 1. LOGICA MASCHERA AUTOMATICA PER LE DATE
+    // BLOCCO.2. LOGICA MASCHERA AUTOMATICA PER LE DATE
     // ==========================================
     const inputNascita = document.getElementById('data-nascita');
     if (inputNascita) {
@@ -318,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
+    // BLOCCO 3. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
     // ==========================================
 // --- AUTOCOMPLETE CITTÀ ULTRA-DIRETTO ---
 let debounce; 
@@ -375,7 +390,7 @@ async function cercaCitta(q) {
           
           suggBox.innerHTML = '';
           suggBox.style.display = 'none';
-        };
+                };
         suggBox.appendChild(li);
       });
       suggBox.style.display = 'block';
@@ -387,7 +402,7 @@ async function cercaCitta(q) {
   }
 }
 
-// Chiusura al click esterno
+// Chiusura del click esterno per nascondere la lista se l'utente clicca fuori
 document.addEventListener('click', (e) => {
   if (suggBox && !e.target.closest('.form-group')) {
     suggBox.innerHTML = '';
@@ -395,160 +410,151 @@ document.addEventListener('click', (e) => {
   }
 });
 
-    // ==========================================
-    // 3. LOGICA CALCOLO DISTANZA (KM)
-    // ==========================================
-// --- LOGICA INTEGRATA PER PERCORSO STRADALE REALE INLINE ---
-let mapInstance = null;
-let routingControl = null;
-
-document.getElementById('btn-calcola').addEventListener('click', function() {
-  const latVal = document.getElementById('cittaLat').value;
-  const lonVal = document.getElementById('cittaLon').value;
-  const campoDistanza = document.getElementById('distanza');
-  const boxMappa = document.getElementById('contenitore-mappa');
-
-  if (!latVal || !lonVal) {
-    alert("Per favore, digita e seleziona prima una città valida dall'elenco dei suggerimenti.");
-    return;
-  }
-
-  const latPartenza = parseFloat(latVal);
-  const lonPartenza = parseFloat(lonVal);
-
-  // Forza l'apertura visiva immediata del contenitore sulla pagina
-  boxMappa.style.height = "320px";
-  boxMappa.style.marginTop = "15px";
-  boxMappa.style.border = "1px solid #ccc";
-
-  // Inizializzazione della mappa Leaflet
-  if (!mapInstance) {
-    mapInstance = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(mapInstance);
-  } else {
-    // Se l'utente ricalcola una nuova città, rimuove la rotta precedente per non sovrapporla
-    if (routingControl) {
-      mapInstance.removeControl(routingControl);
-    }
-  }
-
-  // Risolve il bug del riquadro vuoto/grigio forzando il calcolo dei pixel a schermo aperto
-  setTimeout(function() {
-    mapInstance.invalidateSize(true);
-    
-    // Richiesta stradale reale al server OSRM
-    routingControl = L.Routing.control({
-      waypoints: [
-        L.latLng(latPartenza, lonPartenza),
-        L.latLng(LAT_RADUNO, LON_RADUNO)
-      ],
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://project-osrm.org'
-      }),
-      lineOptions: {
-        styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] // Linea rossa Tesla
-      },
-      createMarker: function() { return null; } // Nasconde i pin predefiniti di Leaflet
-    }).addTo(mapInstance);
-
-    // Quando la rotta stradale viene trovata con successo
-    routingControl.on('routesfound', function(e) {
-      const routes = e.routes;
-      const distanzaMetri = routes.summary.totalDistance;
-      const kmStradaliVeri = Math.round(distanzaMetri / 1000); // Converte i metri in KM effettivi
-      
-      // Scrive stabilmente il chilometraggio stradale nel campo del modulo
-      if (campoDistanza) {
-        campoDistanza.value = kmStradaliVeri + " KM";
-      }
-      
-      // Zooma e centra automaticamente la mappa per inquadrare l'intero viaggio
-      const bounds = L.latLngBounds(routes.coordinates);
-      mapInstance.fitBounds(bounds);
-    });
-
-  }, 200); // Micro-ritardo di 200ms per garantire la corretta visualizzazione delle mappe
-});
-
-  // --- BLOCCO 4: AGGIORNAMENTO PERCORSO STRADALE REALISTICO ---
+ 
+ 
+ 
+  // --- BLOCCO 4: AGGIORNAMENTO PERCORSO STRADALE SULLA MAPPA FISSA ---
   const btnCalcola = document.getElementById('btn-calcola');
   if (btnCalcola) {
     btnCalcola.addEventListener('click', function() {
-      const latVal = document.getElementById('cittaLat').value;
-      const lonVal = document.getElementById('cittaLon').value;
+      // Recupera le coordinate salvate dal campo nascosto (gestito dal Blocco 3)
+      const latVal = document.getElementById('cittaLat') ? document.getElementById('cittaLat').value : '';
+      const lonVal = document.getElementById('cittaLon') ? document.getElementById('cittaLon').value : '';
       const campoDistanza = document.getElementById('distanza');
 
       if (!latVal || !lonVal) {
-        alert("Seleziona prima una città valida dall'elenco.");
+        alert("Per favore, digita e seleziona prima una città valida dall'elenco dei suggerimenti.");
         return;
       }
 
-      // Se c'è già un percorso precedente disegnato sulla mappa, lo cancella
+      // Se c'è un tracciato stradale precedente sulla mappa, lo cancella per non sovrapporlo
       if (routingControl) {
         mapInstance.removeControl(routingControl);
       }
 
-      // Disegna il percorso stradale reale sulle strade italiane
+      // Disegna l'itinerario automobilistico reale sulle strade italiane fino a Vigevano
       routingControl = L.Routing.control({
         waypoints: [
-          L.latLng(parseFloat(latVal), parseFloat(lonVal)), // Partenza
-          L.latLng(LAT_RADUNO, LON_RADUNO)                  // Vigevano
+          L.latLng(parseFloat(latVal), parseFloat(lonVal)), // Punto A: Partenza utente
+          L.latLng(LAT_RADUNO, LON_RADUNO)                  // Punto B: Campo Volo Vigevano
         ],
-        router: L.Routing.osrmv1({ serviceUrl: 'https://project-osrm.org' }),
-        lineOptions: { styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] },
-        createMarker: function() { return null; } // Evita marker doppi o sovrapposti
+        router: L.Routing.osrmv1({ 
+          serviceUrl: 'https://project-osrm.org' 
+        }),
+        lineOptions: { 
+          styles: [{ color: '#cc0000', weight: 6, opacity: 0.85 }] // Linea rossa Tesla
+        },
+        createMarker: function() { return null; } // Evita pin doppi o sovrapposti sulla mappa
       }).addTo(mapInstance);
 
-      // Quando calcola la rotta estrae la distanza stradale esatta
+      // Quando il server stradale restituisce la rotta con successo
       routingControl.on('routesfound', function(e) {
         const routes = e.routes;
+        const distanzaMetri = routes.summary.totalDistance; // Distanza totale in metri
+        const kmStradaliVeri = Math.round(distanzaMetri / 1000); // Conversione finale in KM
+        
+        // Scrive stabilmente la distanza stradale reale nel campo bloccato del modulo
         if (campoDistanza) {
-          campoDistanza.value = Math.round(routes.summary.totalDistance / 1000) + " KM";
+          campoDistanza.value = kmStradaliVeri + " KM";
         }
-        // Zooma in automatico per far vedere tutto il viaggio
-        mapInstance.fitBounds(L.latLngBounds(routes.coordinates));
+        
+        // Inquadra e zooma automaticamente la mappa per mostrare tutto il viaggio dall'inizio alla fine
+        const bounds = L.latLngBounds(routes.coordinates);
+        mapInstance.fitBounds(bounds);
       });
     });
   }
 
-}); // Fine del DOMContentLoaded (CHIUSURA FONDAMENTALE)
+  // --- BLOCCO 4: MODULO REVISIONE DATI E INVIO EMAIL ---
+  const modulo = document.getElementById('modulo-raduno');
+  const boxRiepilogo = document.getElementById('riepilogo-invio');
+  const testoRiepilogo = document.getElementById('dati-riepilogo');
+  const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
+  let datiTemporanei = null;
 
-    // ==========================================
-    // 4. INVIO E SALVATAGGIO DEI DATI
-    // ==========================================
-    const modulo = document.getElementById('modulo-raduno');
-    if (modulo) {
-      modulo.addEventListener('submit', function(e) {
-        e.preventDefault();
+  if (modulo) {
+    modulo.addEventListener('submit', function(e) {
+      e.preventDefault();
 
-        const nuovaRegistrazione = {
-          nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
-          cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
-          email: document.getElementById('email') ? document.getElementById('email').value : '',
-          targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
-          data_nascita: inputNascita ? inputNascita.value : '',
-          km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
-          citta: inputCitta ? inputCitta.value : '',
-          distanza_raduno: document.getElementById('distanza') ? document.getElementById('distanza').value : '',
-          modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
-          data_tesla: inputMacchina ? inputMacchina.value : '',
-          timestamp: new Date().toISOString()
-        };
+      // Raccoglie i dati inseriti nei nuovi campi aggiornati
+      datiTemporanei = {
+        nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
+        cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
+        email: document.getElementById('email') ? document.getElementById('email').value : '',
+        targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
+        data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
+        km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
+        citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
+        distanza_raduno: document.getElementById('distanza') ? document.getElementById('distanza').value : '',
+        modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
+        data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
+        timestamp: new Date().toLocaleString('it-IT')
+      };
 
-        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
-        datiAttuali.push(nuovaRegistrazione);
-        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+      // Genera la visualizzazione stile testo PDF nella pagina
+      testoRiepilogo.innerHTML = `
+        <b>NOME:</b> ${datiTemporanei.nome}<br>
+        <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
+        <b>EMAIL:</b> ${datiTemporanei.email}<br>
+        <b>TRE NUMERI TARGA:</b> ${datiTemporanei.targa}<br>
+        <b>DATA DI NASCITA:</b> ${datiTemporanei.data_nascita}<br>
+        <b>KM ATTUALI VETTURA:</b> ${datiTemporanei.km_tesla}<br>
+        <b>CITTA DI PROVENIENZA:</b> ${datiTemporanei.citta}<br>
+        <b>DISTANZA STRADALE CALCOLATA:</b> ${datiTemporanei.distanza_raduno}<br>
+        <b>MODELLO TESLA:</b> ${datiTemporanei.modello}<br>
+        <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${datiTemporanei.data_tesla}<br>
+        <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
+      `;
 
-        alert("Registrazione effettuata con successo!");
-        modulo.reset();
-        if (document.getElementById('distanza')) document.getElementById('distanza').value = '';
-      });
-    }
+      // Mostra la finestrella di conferma scorrendo la pagina verso il basso
+      boxRiepilogo.style.display = 'block';
+      boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
 
-  });
+  if (btnConfermaEmail) {
+    btnConfermaEmail.addEventListener('click', function() {
+      if (!datiTemporanei) return;
+
+      // Salva una copia di backup anche nel LocalStorage del browser
+      const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
+      datiAttuali.push(datiTemporanei);
+      localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+
+      // Prepara il corpo del testo per l'email finale a radunotesla@gmail.com
+      const emailDestinatario = "radunotesla@gmail.com";
+      const oggettoEmail = encodeURIComponent(`Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`);
+      
+      const corpoEmail = encodeURIComponent(
+        `Dati di registrazione per il Raduno Tesla:\n\n` +
+        `Nome: ${datiTemporanei.nome}\n` +
+        `Cognome: ${datiTemporanei.cognome}\n` +
+        `Email: ${datiTemporanei.email}\n` +
+        `Targa (3 numeri): ${datiTemporanei.targa}\n` +
+        `Data di Nascita: ${datiTemporanei.data_nascita}\n` +
+        `KM Tesla: ${datiTemporanei.km_tesla}\n` +
+        `Città di provenienza: ${datiTemporanei.citta}\n` +
+        `Distanza stradale: ${datiTemporanei.distanza_raduno}\n` +
+        `Modello Tesla: ${datiTemporanei.modello}\n` +
+        `Mese/Anno immatricolazione: ${datiTemporanei.data_tesla}\n` +
+        `Registrato il: ${datiTemporanei.timestamp}`
+      );
+
+      // Apre l'applicazione di posta elettronica dell'utente pre-compilata
+      window.location.href = `mailto:${emailDestinatario}?subject=${oggettoEmail}&body=${corpoEmail}`;
+
+      alert("Conferma salvata! L'applicazione di posta si aprirà ora per inviare i dati a radunotesla@gmail.com.");
+      
+      // Ripristina il modulo allo stato iniziale
+      boxRiepilogo.style.display = 'none';
+      if (modulo) modulo.reset();
+      if (document.getElementById('distanza')) document.getElementById('distanza').value = '';
+    });
+  }
+
+}); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
+
 </script>
 </body>
 </html>
