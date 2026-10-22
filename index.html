@@ -245,77 +245,71 @@
 </div>
 
 <script>
+  // Coordinate precise di destinazione (Strada Scoglio, Vigevano)
   const LAT_RADUNO = 45.3045; 
   const LON_RADUNO = 8.8702;
 
   let cittaLatSelezionata = null;
   let cittaLonSelezionata = null;
 
-  const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-  
-  const gNascita = document.getElementById('nascita-giorno');
-  for(let i=1; i<=31; i++) { gNascita.options[gNascita.options.length] = new Option(i, i); }
-  
-  const mNascita = document.getElementById('nascita-mese');
-  const mTesla = document.getElementById('tesla-mese');
-  mesi.forEach((mese, idx) => {
-    mNascita.options[mNascita.options.length] = new Option(mese, idx + 1);
-    mTesla.options[mTesla.options.length] = new Option(mese, idx + 1);
-  });
+  // Forza il caricamento solo a pagina completamente renderizzata dal browser
+  document.addEventListener("DOMContentLoaded", function() {
+    
+    // --- FUNZIONE POPOLAMENTO DATE A TENDINA ---
+    const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    
+    const gNascita = document.getElementById('nascita-giorno');
+    for(let i=1; i<=31; i++) { gNascita.options[gNascita.options.length] = new Option(i, i); }
+    
+    const mNascita = document.getElementById('nascita-mese');
+    const mTesla = document.getElementById('tesla-mese');
+    mesi.forEach((mese, idx) => {
+      mNascita.options[mNascita.options.length] = new Option(mese, idx + 1);
+      mTesla.options[mTesla.options.length] = new Option(mese, idx + 1);
+    });
 
-  const aNascita = document.getElementById('nascita-anno');
-  const annoCorrente = new Date().getFullYear();
-  for(let i=annoCorrente; i>=1920; i--) { aNascita.options[aNascita.options.length] = new Option(i, i); }
+    const aNascita = document.getElementById('nascita-anno');
+    const annoCorrente = new Date().getFullYear();
+    for(let i=annoCorrente; i>=1920; i--) { aNascita.options[aNascita.options.length] = new Option(i, i); }
 
-  const aTesla = document.getElementById('tesla-anno');
-  for(let i=annoCorrente; i>=2008; i--) { aTesla.options[aTesla.options.length] = new Option(i, i); }
+    const aTesla = document.getElementById('tesla-anno');
+    for(let i=annoCorrente; i>=2008; i--) { aTesla.options[aTesla.options.length] = new Option(i, i); }
 
-  function calcolaDistanzaKm(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return Math.round(R * c);
-  }
+    // --- LOGICA SUGGERIMENTI CITTA' (OPENMAPS/PHOTON) ---
+    const inputCitta = document.getElementById('citta');
+    const listaSuggerimenti = document.getElementById('suggerimenti-citta');
+    const inputDistanza = document.getElementById('distanza');
+    const btnCalcola = document.getElementById('btn-calcola');
+    let debounceTimer = null;
 
-  const inputCitta = document.getElementById('citta');
-  const listaSuggerimenti = document.getElementById('suggerimenti-citta');
-  const inputDistanza = document.getElementById('distanza');
-  const btnCalcola = document.getElementById('btn-calcola');
-  let debounceTimer = null;
+    if (inputCitta && listaSuggerimenti) {
+      inputCitta.addEventListener('input', function() {
+        const testo = this.value.trim();
+        clearTimeout(debounceTimer);
+        
+        if (testo.length < 3) {
+          listaSuggerimenti.style.display = 'none';
+          return;
+        }
 
-  if (inputCitta && listaSuggerimenti) {
-    inputCitta.addEventListener('input', function() {
-      const testo = this.value.trim();
-      clearTimeout(debounceTimer);
-      
-      if (testo.length < 3) {
-        listaSuggerimenti.style.display = 'none';
-        return;
-      }
+        debounceTimer = setTimeout(() => {
+          const url = `https://komoot.io{encodeURIComponent(testo)}&lang=it&filter=osm:key:place&limit=6`;
 
-      debounceTimer = setTimeout(() => {
-        const url = `https://komoot.io{encodeURIComponent(testo)}&lang=it&filter=osm:key:place&limit=6`;
-
-        fetch(url)
-          .then(res => res.json())
-          .then(data => {
-            listaSuggerimenti.innerHTML = '';
-            const localitaItaliane = data.features.filter(f => f.properties.countrycode === 'IT');
-            
-            if (localitaItaliane.length === 0) {
-              listaSuggerimenti.style.display = 'none';
-              return;
-            }
-
-            localitaItaliane.forEach(item => {
-              const prop = item.properties;
-              const nomeVisualizzato = prop.name + (prop.state ? `, ${prop.state}` : '');
+          fetch(url)
+            .then(res => res.json())
+            .then(data => {
+              listaSuggerimenti.innerHTML = '';
+              const localitaItaliane = data.features.filter(f => f.properties.countrycode === 'IT');
               
-              const li = document.createElement('li');
-              li.textContent = nomeVisualizzato;
-              
+              if (localitaItaliane.length === 0) {
+                listaSuggerimenti.style.display = 'none';
+                return;
+              }
+
+              localitaItaliane.forEach(item => {
+                const prop = item.properties;
+                const nomeVisualizzato = prop.name + (prop.state ? `, ${prop.state}` : '');
+                
+                const li = document.createElement('li');
+                li.textContent = nomeVisualizzato;
+                
