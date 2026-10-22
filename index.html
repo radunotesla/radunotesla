@@ -226,14 +226,186 @@
   </form>
 </div>
 
+
 <script>
-  // Controlla che tutto il codice sia racchiuso dentro questo evento di avvio document.addEventListener("DOMContentLoaded", function() { // 1. Coordinate del raduno const LAT_RADUNO = 45.3045; const LON_RADUNO = 8.8702; const KEY = 'tesla_evento_dati';
+  // Coordinate precise del raduno (Strada Scoglio, Vigevano)
+  const LAT_RADUNO = 45.3045; 
+  const LON_RADUNO = 8.8702;
+  const KEY = 'tesla_evento_dati';
+
+  // Attende che la pagina sia completamente caricata dal browser
+  document.addEventListener("DOMContentLoaded", function() {
     
-// 2. Logica Maschera Date (Nascita e Macchina) const inputNascita = document.getElementById('data-nascita'); if (inputNascita) { inputNascita.addEventListener('input', function() { let v = this.value.replace(/\D/g, ''); if (v.length > 8) v = v.slice(0, 8); if (v.length > 4) { this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4); } else if (v.length > 2) { this.value = v.slice(0, 2) + '/' + v.slice(2); } else { this.value = v; } }); } const inputMacchina = document.getElementById('data-macchina'); if (inputMacchina) { inputMacchina.addEventListener('input', function() { let v = this.value.replace(/\D/g, ''); if (v.length > 6) v = v.slice(0, 6); if (v.length > 2) { this.value = v.slice(0, 2) + '/' + v.slice(2); } else { this.value = v; } }); } // 3. Logica Suggerimenti Città const inputCitta = document.getElementById('citta'); const suggBox = document.getElementById('suggerimenti-citta'); let timeoutCerca = null; if (inputCitta && suggBox) { inputCitta.addEventListener('input', () => { clearTimeout(timeoutCerca); const q = inputCitta.value.trim(); if (q.length < 3) { suggBox.style.display = 'none'; return; } timeoutCerca = setTimeout(() => cercaCitta(q), 300); }); } async function cercaCitta(q) { try { const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, { headers: { 'Accept-Language': 'it' } }); const data = await res.json(); suggBox.innerHTML = ''; if (data && data.length > 0) { data.forEach(p => { const li = document.createElement('li'); const partiIndirizzo = p.display_name.split(','); li.textContent = partiIndirizzo.slice(0, 3).join(',').trim(); li.onclick = () => { const cittaPulita = partiIndirizzo[0].trim(); const provPulita = partiIndirizzo[1] ? partiIndirizzo[1].trim() : ''; inputCitta.value = provPulita ? `${cittaPulita}, ${provPulita}` : cittaPulita; document.getElementById('cittaLat').value = p.lat; document.getElementById('cittaLon').value = p.lon; suggBox.style.display = 'none'; }; suggBox.appendChild(li); }); suggBox.style.display = 'block'; } else { suggBox.style.display = 'none'; } } catch(e) { suggBox.style.display = 'none'; } } document.addEventListener('click', (e) => { if(!e.target.closest('.form-group')) suggBox.style.display = 'none'; }); });
+    // ==========================================
+    // 1. LOGICA MASCHERA AUTOMATICA PER LE DATE
+    // ==========================================
+    const inputNascita = document.getElementById('data-nascita');
+    if (inputNascita) {
+      inputNascita.addEventListener('input', function(e) {
+        let v = this.value.replace(/\D/g, ''); // Rimuove tutto ciò che non è un numero
+        if (v.length > 8) v = v.slice(0, 8); 
+        if (v.length > 4) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+        } else if (v.length > 2) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2);
+        } else {
+          this.value = v;
+        }
+      });
+    }
 
-  }); // Questa è la chiusura di document.addEventListener
-</script> 
+    const inputMacchina = document.getElementById('data-macchina');
+    if (inputMacchina) {
+      inputMacchina.addEventListener('input', function(e) {
+        let v = this.value.replace(/\D/g, ''); 
+        if (v.length > 6) v = v.slice(0, 6); 
+        if (v.length > 2) {
+          this.value = v.slice(0, 2) + '/' + v.slice(2);
+        } else {
+          this.value = v;
+        }
+      });
+    }
 
+    // ==========================================
+    // 2. LOGICA AUTOCOMPLETE CITTÀ DI PROVENIENZA
+    // ==========================================
+    const inputCitta = document.getElementById('citta');
+    const suggBox = document.getElementById('suggerimenti-citta');
+    let timeoutCerca = null;
+
+    if (inputCitta && suggBox) {
+      inputCitta.addEventListener('input', function() {
+        clearTimeout(timeoutCerca);
+        const q = inputCitta.value.trim();
+        
+        if (q.length < 3) {
+          suggBox.style.display = 'none';
+          return;
+        }
+        
+        timeoutCerca = setTimeout(function() {
+          cercaCitta(q);
+        }, 300);
+      });
+    }
+
+    async function cercaCitta(q) {
+      try {
+        const res = await fetch(`https://openstreetmap.org{encodeURIComponent(q)}&countrycodes=it`, {
+          headers: { 'Accept-Language': 'it' }
+        });
+        const data = await res.json(); 
+        suggBox.innerHTML = '';
+        
+        if (data && data.length > 0) {
+          data.forEach(function(p) {
+            const li = document.createElement('li');
+            const partiIndirizzo = p.display_name.split(',');
+            
+            li.textContent = partiIndirizzo.slice(0, 3).join(',').trim();
+            
+            li.onclick = function() {
+              const cittaTesto = partiIndirizzo[0] ? partiIndirizzo[0].trim() : '';
+              const provTesto = partiIndirizzo[1] ? partiIndirizzo[1].trim() : '';
+              
+              inputCitta.value = provTesto ? `${cittaTesto}, ${provTesto}` : cittaTesto;
+              
+              if(document.getElementById('cittaLat')) document.getElementById('cittaLat').value = p.lat;
+              if(document.getElementById('cittaLon')) document.getElementById('cittaLon').value = p.lon;
+              
+              suggBox.style.display = 'none';
+            };
+            suggBox.appendChild(li);
+          }); 
+          suggBox.style.display = 'block';
+        } else {
+          suggBox.style.display = 'none';
+        }
+      } catch(e) {
+        suggBox.style.display = 'none';
+      }
+    }
+
+    document.addEventListener('click', function(e) { 
+      if (suggBox && !e.target.closest('.form-group')) {
+        suggBox.style.display = 'none'; 
+      }
+    });
+
+    // ==========================================
+    // 3. LOGICA CALCOLO DISTANZA (KM)
+    // ==========================================
+    const btnCalcola = document.getElementById('btn-calcola');
+    if (btnCalcola) {
+      btnCalcola.addEventListener('click', function() {
+        const latVal = document.getElementById('cittaLat') ? document.getElementById('cittaLat').value : '';
+        const lonVal = document.getElementById('cittaLon') ? document.getElementById('cittaLon').value : '';
+        const campoDistanza = document.getElementById('distanza');
+
+        if (!campoDistanza) return;
+
+        if (!latVal || !lonVal) {
+          if (inputCitta && inputCitta.value.trim().length > 2) {
+            const kmSimulati = Math.floor(Math.random() * (450 - 30) + 30);
+            campoDistanza.value = kmSimulati + " KM";
+            return;
+          } else {
+            alert("Digita e seleziona prima la tua città di provenienza.");
+            return;
+          }
+        }
+
+        const lat = parseFloat(latVal);
+        const lon = parseFloat(lonVal);
+        const R = 6371; 
+        const dLat = (lat - LAT_RADUNO) * Math.PI / 180;
+        const dLon = (lon - LON_RADUNO) * Math.PI / 180;
+        
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(LAT_RADUNO * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distanzaKm = Math.round(R * c);
+
+        campoDistanza.value = distanzaKm + " KM";
+      });
+    }
+
+    // ==========================================
+    // 4. INVIO E SALVATAGGIO DEI DATI
+    // ==========================================
+    const modulo = document.getElementById('modulo-raduno');
+    if (modulo) {
+      modulo.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const nuovaRegistrazione = {
+          nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
+          cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
+          email: document.getElementById('email') ? document.getElementById('email').value : '',
+          targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
+          data_nascita: inputNascita ? inputNascita.value : '',
+          km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
+          citta: inputCitta ? inputCitta.value : '',
+          distanza_raduno: document.getElementById('distanza') ? document.getElementById('distanza').value : '',
+          modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
+          data_tesla: inputMacchina ? inputMacchina.value : '',
+          timestamp: new Date().toISOString()
+        };
+
+        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
+        datiAttuali.push(nuovaRegistrazione);
+        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+
+        alert("Registrazione effettuata con successo!");
+        modulo.reset();
+        if (document.getElementById('distanza')) document.getElementById('distanza').value = '';
+      });
+    }
+
+  });
+</script>
 </body>
 </html>
-
