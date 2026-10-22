@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registrazione Raduno Tesla</title>
+  <title>Registrazione Raduno Tesla
+<!-- Librerie per il calcolo stradale integrato -->
+<link rel="stylesheet" href="https://unpkg.com" />
+<link rel="stylesheet" href="https://unpkg.com" />
+<script src="https://unpkg.com"></script>
+<script src="https://unpkg.com"></script>
+
+</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -147,6 +154,24 @@
     .btn-invia:hover {
       background-color: #a30000;
     }
+
+/* Box mappa integrato nella pagina */
+#contenitore-mappa {
+  width: 100%;
+  height: 0; /* Rimane invisibile (altezza 0) finché non si calcola il percorso */
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid #ccc;
+  transition: height 0.3s ease; /* Effetto transizione fluida quando appare */
+  display: block;
+}
+
+/* Nasconde il pannello testuale dei passaggi stradali di Leaflet (teniamo solo la mappa visiva) */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+
   </style>
 </head>
 <body>
@@ -201,7 +226,9 @@
       <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la città..." autocomplete="off" required>
       <ul id="suggerimenti-citta" class="suggestions-list"></ul>
       <button type="button" id="btn-calcola" class="btn-secondario">CALCOLA km percorsi</button>
-      
+      <!-- FONDAMENTALE: Il contenitore dove si materializzerà la mappa stradale --> 
+<div id="contenitore-mappa"></div>
+
       <input type="hidden" id="cittaLat">
       <input type="hidden" id="cittaLon">
     </div>
@@ -348,33 +375,73 @@ document.addEventListener('click', (e) => {
     // ==========================================
     // 3. LOGICA CALCOLO DISTANZA (KM)
     // ==========================================
-   // --- CALCOLO CHILOMETRI REALI ---
-const btnCalcola = document.getElementById('btn-calcola');
-if (btnCalcola) {
-  btnCalcola.addEventListener('click', function() {
-    const latVal = document.getElementById('cittaLat').value;
-    const lonVal = document.getElementById('cittaLon').value;
-    const campoDistanza = document.getElementById('distanza');
+   // --- CALCOLO PERCORSO STRADALE REALE ED ESTRAZIONE KM ---
+let istanzaMappa = null;
+let controlloPercorso = null;
 
-    if (!latVal || !lonVal) {
-      alert("Seleziona prima una città valida dall'elenco dei suggerimenti.");
-      return;
+document.getElementById('btn-calcola').addEventListener('click', function() {
+  const latVal = document.getElementById('cittaLat').value;
+  const lonVal = document.getElementById('cittaLon').value;
+  const campoDistanza = document.getElementById('distanza');
+  const boxMappa = document.getElementById('contenitore-mappa');
+
+  if (!latVal || !lonVal) {
+    alert("Seleziona prima una città valida dall'elenco dei suggerimenti.");
+    return;
+  }
+
+  const latPartenza = parseFloat(latVal);
+  const lonPartenza = parseFloat(lonVal);
+
+  // 1. Mostra il box della mappa espandendo l'altezza in modo fluido
+  boxMappa.style.height = "280px";
+
+  // 2. Se la mappa non è mai stata creata, la inizializziamo
+  if (!istanzaMappa) {
+    istanzaMappa = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(istanzaMappa);
+  } else {
+    // Se esiste già, ripuliamo il vecchio percorso prima di tracciare il nuovo
+    if (controlloPercorso) {
+      istanzaMappa.removeControl(controlloPercorso);
     }
+  }
 
-    const lat = parseFloat(latVal);
-    const lon = parseFloat(lonVal);
-    const R = 6371; 
-    const dLat = (lat - LAT_RADUNO) * Math.PI / 180;
-    const dLon = (lon - LON_RADUNO) * Math.PI / 180;
+  // Forza il browser a ricalcolare le dimensioni del riquadro appena mostrato
+  setTimeout(() => { istanzaMappa.invalidateSize(); }, 100);
+
+  // 3. Avvia il motore di calcolo stradale OSRM
+  controlloPercorso = L.Routing.control({
+    waypoints: [
+      L.latLng(latPartenza, lonPartenza), // Punto A: Città utente
+      L.latLng(LAT_RADUNO, LON_RADUNO)    // Punto B: Campo Volo Vigevano
+    ],
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://project-osrm.org' // Server stradale gratuito stabile
+    }),
+    lineOptions: {
+      styles: [{ color: '#cc0000', weight: 5, opacity: 0.8 }] // Linea rossa in stile Tesla
+    },
+    createMarker: function() { return null; } // Nasconde i marker standard brutti di Leaflet
+  }).addTo(istanzaMappa);
+
+  // 4. Quando il calcolo stradale ha successo, estrae la distanza precisa
+  controlloPercorso.on('routesfound', function(e) {
+    const rotte = e.routes;
+    const distanzaMetri = rotte[0].summary.totalDistance; // Distanza fornita in metri
+    const distanzaKmReali = Math.round(distanzaMetri / 1000); // Converte in chilometri finiti
     
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(LAT_RADUNO * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2);
+    if (campoDistanza) {
+      campoDistanza.value = distanzaKmReali + " KM";
+    }
     
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    if (campoDistanza) campoDistanza.value = Math.round(R * c) + " KM";
+    // Adatta automaticamente lo zoom della mappa per mostrare tutto il viaggio dall'inizio alla fine
+    const coordinateRotte = rotte[0].coordinates;
+    istanzaMappa.fitBounds(L.latLngBounds(coordinateRotte));
   });
-}
+});
 
     // ==========================================
     // 4. INVIO E SALVATAGGIO DEI DATI
