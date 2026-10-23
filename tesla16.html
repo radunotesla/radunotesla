@@ -169,7 +169,7 @@
 
   <div class="sezione-titolo">Modulo di Registrazione</div>
 
-< <form id="modulo-raduno" action="https://formspree.io/f/xqppazba" method="POST">
+<form id="modulo-raduno" action="https://formspree.io/f/xqppazba" method="POST">
 
 <div class="form-group">
     <label for="nome">NOME:</label>
@@ -193,8 +193,7 @@
 
 <div class="form-group">
     <label for="data-nascita">DATA DI NASCITA:</label>
-    <!-- Campo Data di Nascita ottimizzato per Mobile -->
-    <input type="text" id="data-nascita" name="data-nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/[0-9]{4}" required>
+    <input type="text" id="data-nascita" name="data-nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="(0[1-9]|[0-9]|3)\/(0[1-9]|1[0-2])\/[0-9]{4}" required>
 </div>
 
 <div class="form-group">
@@ -212,7 +211,6 @@
 </div>
 
 <div class="form-group">
-    <!-- CORRETTO: for="km_CASA" associato all'input corretto -->
     <label for="km_CASA">QUANTI KM HAI FATTO PER VENIRE QUI DALLA TUA CITTA' ?</label>
     <input type="number" id="km_CASA" name="km_CASA" placeholder="Es. 45000" min="0" required>
 </div>
@@ -224,9 +222,23 @@
 
 <div class="form-group">
     <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
-    <!-- Campo Data Macchina ottimizzato per Mobile -->
     <input type="text" id="data-macchina" name="data-macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" required>
 </div>
+
+<!-- == BOTTONE PRINCIPALE DEL MODULO == -->
+<button type="submit" class="btn-invia" style="margin-top: 20px; width: 100%; padding: 12px; font-weight: bold;">VERIFICA DATI REGISTRAZIONE</button>
+
+<!-- == SCHERMATA DI RIEPILOGO DATI E CONFERMA FINALE == -->
+<div id="riepilogo-invio" style="display: none; margin-top: 30px; padding: 20px; border: 2px dashed #333; background: #f9f9f9;">
+    <h3>CONTROLLA I TUOI DATI PRIMA DI INVIARE:</h3>
+    <div id="dati-riepilogo" style="margin-bottom: 20px; line-height: 1.6;"></div>
+    
+    <!-- Questo è il bottone finale che attiva l'invio a Formspree ed esegue l'alert di ringraziamento -->
+    <button type="button" id="btn-conferma-email" style="width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer;">CONFERMA E INVIA DEFINITIVAMENTE</button>
+</div>
+
+</form>
+
 
 <script>
   // Coordinate precise del raduno (Strada Scoglio, Vigevano)
