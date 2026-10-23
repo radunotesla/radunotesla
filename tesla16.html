@@ -354,7 +354,7 @@ document.addEventListener('click', (e) => {
 });
 
     
-      // // BLOCCO 4: INVIO IN BACKGROUND CON FORMSPREE (PER SITI GITHUB PAGES) ---
+      // // BLOCCO 4: INVIO DIRETTO IN BACKGROUND (OTTIMIZZATO PER IPHONE/ANDROID E GITHUB) ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
@@ -366,7 +366,7 @@ if (modulo) {
     modulo.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Raccoglie i dati inseriti nei campi aggiornati
+        // Raccoglie i dati inseriti nei campi
         datiTemporanei = {
             nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
             cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
@@ -381,7 +381,7 @@ if (modulo) {
             timestamp: new Date().toLocaleString('it-IT')
         };
 
-        // Mostra il riepilogo a schermo prima di inviare
+        // Genera la visualizzazione del riepilogo a schermo
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${datiTemporanei.nome}<br>
             <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
@@ -405,46 +405,52 @@ if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
         if (!datiTemporanei) return;
 
-        // Disabilita il tasto per evitare doppi clic fastidiosi
+        // Effetto caricamento sul bottone
         btnConfermaEmail.innerText = "INVIO IN CORSO...";
         btnConfermaEmail.disabled = true;
 
-        // INCOLLA IL TUO LINK DI FORMSPREE TRA LE VIRGOLETTE QUI SOTTO:
+        // 1. Sostituisci qui sotto l'ID di Formspree che hai preso dal loro sito
         const urlFormspree = "https://formspree.io/f/xqppazba";
 
-        // Spedisce i dati al server invisibilmente
+        // 2. CORREZIONE DI SICUREZZA: Trasformiamo i dati in un modulo standard compatibile con Safari
+        const datiFormattati = new URLSearchParams();
+        Object.keys(datiTemporanei).forEach(key => {
+            datiFormattati.append(key, datiTemporanei[key]);
+        });
+
+        // Spedisce i dati al server in background in modo sicuro
         fetch(urlFormspree, {
             method: "POST",
-            body: JSON.stringify(datiTemporanei),
+            body: datiFormattati.toString(),
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
             }
         })
         .then(function(response) {
             if (response.ok) {
-                // SE TUTTO VA BENE:
-                alert("Iscrizione completata con successo! Abbiamo ricevuto i tuoi dati.");
+                // IL TUO MESSAGGIO DI RINGRAZIAMENTO RICHIESTO:
+                alert("Grazie per l'invio del modulo di Registrazione!");
                 
-                // Salvataggio di scorta locale
+                // Salvataggio locale di backup
                 const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
                 datiAttuali.push(datiTemporanei);
                 localStorage.setItem(KEY, JSON.stringify(datiAttuali));
 
-                // Resetta la pagina
+                // Resetta la schermata allo stato iniziale
                 boxRiepilogo.style.display = 'none';
                 if (modulo) modulo.reset();
                 if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
             } else {
-                alert("C'è stato un problema con l'invio. Riprova tra pochi istanti.");
+                alert("C'è stato un problema tecnico con il server. Riprova tra poco.");
             }
         })
         .catch(function(error) {
-            alert("Errore di rete. Controlla la tua connessione internet.");
+            alert("Errore di rete. Controlla la connessione del tuo telefono.");
             console.error(error);
         })
         .finally(function() {
-            // Ripristina il bottone originale
+            // Ripristina il testo del bottone
             btnConfermaEmail.innerText = "CONFERMA E INVIA";
             btnConfermaEmail.disabled = false;
         });
@@ -458,3 +464,4 @@ if (btnConfermaEmail) {
 
 
 
+ 
