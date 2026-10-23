@@ -160,7 +160,7 @@
 <div class="form-container">
 
   <div class="header-evento">
-    <h1>RADUNO 2</h1>
+    <h1>RADUNO</h1>
     <h2>TESLA</h2>
     <p><strong>SABATO 24 OTTOBRE 2026</strong></p>
     <p><em>Dalle 15:00 Fino Al Tramonto</em></p>
@@ -366,7 +366,7 @@ if (modulo) {
     modulo.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Raccoglie i dati inseriti nei nuovi campi aggiornati
+        // Raccoglie i dati inseriti nei campi aggiornati
         datiTemporanei = {
             nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
             cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
@@ -375,14 +375,14 @@ if (modulo) {
             data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
             km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
             citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
-            // AGGIORNATO: Legge i km scritti a mano dall'utente nel campo km_CASA
+            // Legge i km scritti a mano dall'utente nel campo km_CASA
             distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
             modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
             data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
             timestamp: new Date().toLocaleString('it-IT')
         };
 
-        // Genera la visualizzazione stile testo PDF nella pagina
+        // Genera la visualizzazione stile testo nella pagina
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${datiTemporanei.nome}<br>
             <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
@@ -407,16 +407,15 @@ if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
         if (!datiTemporanei) return;
 
-        // Salva una copia di backup anche nel LocalStorage del browser
+        // Salva una copia di backup nel LocalStorage del browser
         const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
         datiAttuali.push(datiTemporanei);
         localStorage.setItem(KEY, JSON.stringify(datiAttuali));
 
-        // Prepara il corpo del testo per l'email finale a radunotesla@gmail.com
         const emailDestinatario = "radunotesla@gmail.com";
-        const oggettoEmail = encodeURIComponent(`Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`);
+        const oggettoEmail = `Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`;
 
-        // Scrittura pulita e moderna del testo dell'email
+        // Scrittura pulita del testo dell'email
         const testoChiaroEmail = `Dati di registrazione per il Raduno Tesla:
 Nome: ${datiTemporanei.nome}
 Cognome: ${datiTemporanei.cognome}
@@ -430,19 +429,33 @@ Modello Tesla: ${datiTemporanei.modello}
 Mese/Anno immatricolazione: ${datiTemporanei.data_tesla}
 Registrato il: ${datiTemporanei.timestamp}`;
 
-        const corpoEmail = encodeURIComponent(testoChiaroEmail);
+        // Prova ad aprire l'applicazione di posta predefinita (ottimizzato per iOS/Safari)
+        const linkMailto = `mailto:${emailDestinatario}?subject=${encodeURIComponent(oggettoEmail)}&body=${encodeURIComponent(testoChiaroEmail)}`;
+        window.location.assign(linkMailto);
 
-        // Apre l'applicazione di posta elettronica dell'utente pre-compilata
-        window.location.href = `mailto:${emailDestinatario}?subject=${oggettoEmail}&body=${corpoEmail}`;
+        // Sistema di sicurezza con avviso e copia automatica negli appunti
+        setTimeout(function() {
+            const conferma = confirm(
+                "L'applicazione di posta dovrebbe essersi aperta.\n\n" +
+                "Se NON si è aperta, clicca 'OK' per copiare automaticamente tutti i dati negli appunti. " +
+                "Potrai poi incollarli manualmente nella tua app di posta (Gmail, Hotmail, Mail, ecc.) e inviarli a radunotesla@gmail.com."
+            );
 
-        alert("Conferma salvata! L'applicazione di posta si aprirà ora per inviare i dati a radunotesla@gmail.com.");
+            if (conferma) {
+                const testoDaCopiare = `Invia a: ${emailDestinatario}\nOggetto: ${oggettoEmail}\n\n${testoChiaroEmail}`;
+                
+                navigator.clipboard.writeText(testoDaCopiare).then(function() {
+                    alert("Dati copiati negli appunti! Ora apri la tua app di posta, tieni premuto nello spazio del testo, fai 'Incolla' e invia la mail.");
+                }).catch(function() {
+                    alert("Impossibile copiare in automatico. Puoi comunque selezionare e copiare il testo dal riepilogo a schermo.");
+                });
+            }
 
-        // Ripristina il modulo allo stato iniziale
-        boxRiepilogo.style.display = 'none';
-        if (modulo) modulo.reset();
-
-                // AGGIORNATO: Svuota il campo dei km scritti a mano al posto del vecchio 'distanza'
-        if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
+            // Ripristina il modulo allo stato iniziale
+            boxRiepilogo.style.display = 'none';
+            if (modulo) modulo.reset();
+            if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
+        }, 800);
     });
 }
 
@@ -450,4 +463,5 @@ Registrato il: ${datiTemporanei.timestamp}`;
 </script>
 </body>
 </html>
+
 
