@@ -407,39 +407,76 @@ setTimeout(() => {
     map.invalidateSize();
 }, 500);
 
-    // ==========================================
-    // 4. INVIO E SALVATAGGIO DEI DATI
-    // ==========================================
-    const modulo = document.getElementById('modulo-raduno');
-    if (modulo) {
-      modulo.addEventListener('submit', function(e) {
-        e.preventDefault();
+// ========================================================
+// BLOCCO 4: INVIO E SALVATAGGIO DEI DATI SU GOOGLE SHEETS
+// ========================================================
 
-        const nuovaRegistrazione = {
-          nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
-          cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
-          email: document.getElementById('email') ? document.getElementById('email').value : '',
-          targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
-          data_nascita: inputNascita ? inputNascita.value : '',
-          km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
-          citta: inputCitta ? inputCitta.value : '',
-          distanza_raduno: document.getElementById('distanza') ? document.getElementById('distanza').value : '',
-          modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
-          data_tesla: inputMacchina ? inputMacchina.value : '',
-          timestamp: new Date().toISOString()
+// Sostituisci questo con il link dell'applicazione web che hai generato su Google
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzlwCJg2hE0QU68Vn7L72Lgd-82hfazfdTJS5Dgu96x3xBrW_jYPe6fDvDTjw4H4AgW/exec";
+
+// Trova il pulsante finale di invio. 
+// Controlla se nel tuo HTML si chiama 'btn-invia' o 'conferma-invia'. Cambialo qui sotto se serve:
+const btnInvia = document.getElementById('conferma-invia') || document.getElementById('btn-invia') || document.querySelector('button[type="submit"]') || document.getElementById('btn_invia');
+
+if (btnInvia) {
+    btnInvia.addEventListener('click', function(e) {
+        e.preventDefault(); // Impedisce alla pagina di ricaricarsi ed eliminare i dati
+
+        // 1. Raccoglie i valori inseriti dall'utente nel modulo HTML
+        // NOTA: Controlla che gli ID dentro getElementById combacino esattamente con i tuoi campi!
+        const datiIscrizione = {
+            nome: document.getElementById('nome')?.value || '',
+            cognome: document.getElementById('cognome')?.value || '',
+            email: document.getElementById('email')?.value || document.getElementById('mail')?.value || '',
+            targa: document.getElementById('targa')?.value || '',
+            dataNascita: document.getElementById('data_nascita')?.value || document.getElementById('nascita')?.value || '',
+            kmTesla: document.getElementById('km_tesla')?.value || document.getElementById('km')?.value || '',
+            citta: document.getElementById('citta')?.value || document.getElementById('citta_provenienza')?.value || '',
+            modello: document.getElementById('modello')?.value || document.getElementById('modello_tesla')?.value || ''
         };
 
-        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
-        datiAttuali.push(nuovaRegistrazione);
-        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+        // Verifica elementare di sicurezza: se la mail è vuota ferma l'invio
+        if (!datiIscrizione.email) {
+            alert("Il campo Email è obbligatorio per l'iscrizione!");
+            return;
+        }
 
-        alert("Registrazione effettuata con successo!");
-        modulo.reset();
-        if (document.getElementById('distanza')) document.getElementById('distanza').value = '';
-      });
-    }
+        // Cambia temporaneamente il testo del bottone per mostrare che sta caricando
+        const testoOriginaleBottone = btnInvia.textContent;
+        btnInvia.textContent = "Invio in corso...";
+        btnInvia.disabled = true;
 
-  });
+        // 2. Spedisce i dati a Google Sheets tramite una chiamata invisibile (Fetch)
+        fetch(URL_GOOGLE_SCRIPT, {
+            method: "POST",
+            mode: "no-cors", // Evita i blocchi di sicurezza dei browser sulle pagine GitHub
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datiIscrizione)
+        })
+        .then(() => {
+            // Avviso di successo a schermo
+            alert("Registrazione completata con successo! Ci vediamo al raduno.");
+            
+            // Ripristina il bottone
+            btnInvia.textContent = testoOriginaleBottone;
+            btnInvia.disabled = false;
+
+            // (Opzionale) Svuota il modulo se vuoi lasciarlo pulito dopo l'invio
+            const formElement = document.querySelector('form');
+            if (formElement) formElement.reset();
+        })
+        .catch(error => {
+            console.error("Errore durante l'invio dei dati:", error);
+            alert("Si è verificato un errore durante l'invio. Riprova più tardi.");
+            
+            btnInvia.textContent = testoOriginaleBottone;
+            btnInvia.disabled = false;
+        });
+    });
+}
+
 </script>
 </body>
 </html>
