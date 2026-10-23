@@ -4,11 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registrazione Raduno Tesla
-<!-- Librerie per il calcolo stradale integrato -->
-<link rel="stylesheet" href="https://unpkg.com" />
-<link rel="stylesheet" href="https://unpkg.com" />
-<script src="https://unpkg.com"></script>
-<script src="https://unpkg.com"></script>
 
 </title>
   <style>
@@ -155,20 +150,7 @@
       background-color: #a30000;
     }
 
-/* Riquadro mappa stradale istantaneo */
-#contenitore-mappa {
-  width: 100%;
-  height: 0; /* Inizialmente chiuso */
-  border-radius: 8px;
-  margin-top: 12px;
-  display: block;
-  z-index: 5;
-}
 
-/* Nasconde le istruzioni testuali a sinistra/destra */
-.leaflet-routing-container {
-  display: none !important;
-}
 
 
   </style>
@@ -233,9 +215,9 @@
     </div>
 
     <div class="form-group">
-      <label for="distanza">PER IL TUO VIAGGIO FINO A QUI (strada scoglio 27029 vigevano (Pavia)) HAI FATTO KM:</label>
-      <input type="text" id="distanza" name="distanza" readonly placeholder="Clicca su 'CALCOLA km percorsi'" required>
-    </div>
+      <label for="km_tesla">QUANTI KM HAI FATTO PER VENIRE QUI DALLA TUA CITTA’ ?  </label>
+      <input type="number" id="km_CASA" name="km_CASA" placeholder="Es. 45000" min="0" required>
+    </div></div>
 
     <div class="form-group">
       <label for="modello">INDICA IL MODELLO DELLA TUA TESLA:</label>
@@ -371,83 +353,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-    // ==========================================
-    // 3. LOGICA CALCOLO DISTANZA (KM)
-    // ==========================================
-   // --- CALCOLO PERCORSO STRADALE DEFINITIVO SENZA BLOCCHI GRAFICI ---
-let istanzaMappa = null;
-let controlloPercorso = null;
-
-document.getElementById('btn-calcola').addEventListener('click', function() {
-  const latVal = document.getElementById('cittaLat').value;
-  const lonVal = document.getElementById('cittaLon').value;
-  const campoDistanza = document.getElementById('distanza');
-  const boxMappa = document.getElementById('contenitore-mappa');
-
-  if (!latVal || !lonVal) {
-    alert("Seleziona prima una città valida dall'elenco dei suggerimenti.");
-    return;
-  }
-
-  const latPartenza = parseFloat(latVal);
-  const lonPartenza = parseFloat(lonVal);
-
-  // 1. Diamo subito al contenitore l'altezza fissa prima di caricare Leaflet
-  boxMappa.style.height = "300px";
-  boxMappa.style.border = "1px solid #ccc";
-
-  // 2. Avviamo la mappa dentro un micro-timeout per dare tempo al browser di renderizzare il riquadro HTML
-  setTimeout(function() {
     
-    if (!istanzaMappa) {
-      // Inizializza la mappa centrata provvisoriamente su Vigevano
-      istanzaMappa = L.map('contenitore-mappa').setView([LAT_RADUNO, LON_RADUNO], 9);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(istanzaMappa);
-    } else {
-      // Se esisteva già, rimuoviamo la vecchia rotta stradale per non sovrapporla
-      if (controlloPercorso) {
-        istanzaMappa.removeControl(controlloPercorso);
-      }
-    }
-
-    // Forza il ricalcolo geometrico dei pixel della mappa
-    istanzaMappa.invalidateSize();
-
-    // 3. Creazione del tracciato stradale OSRM
-    controlloPercorso = L.Routing.control({
-      waypoints: [
-        L.latLng(latPartenza, lonPartenza),
-        L.latLng(LAT_RADUNO, LON_RADUNO)
-      ],
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://project-osrm.org'
-      }),
-      lineOptions: {
-        styles: [{ color: '#cc0000', weight: 6, opacity: 0.8 }]
-      },
-      createMarker: function() { return null; } // Elimina i pin A e B predefiniti
-    }).addTo(istanzaMappa);
-
-    // 4. Ricezione e lettura dei dati stradali
-    controlloPercorso.on('routesfound', function(e) {
-      const rotte = e.routes;
-      const distanzaMetri = rotte[0].summary.totalDistance; 
-      const distanzaKmReali = Math.round(distanzaMetri / 1000); 
-      
-      if (campoDistanza) {
-        campoDistanza.value = distanzaKmReali + " KM";
-      }
-      
-      // Inquadra e zooma automaticamente la mappa sul tragitto reale calcolato
-      const coordinateRotte = rotte[0].coordinates;
-      istanzaMappa.fitBounds(L.latLngBounds(coordinateRotte), { padding: [30, 30] });
-    });
-
-  }, 150); // Ritardo di 150 millisecondi di sicurezza
-});
-
     // ==========================================
     // 4. INVIO E SALVATAGGIO DEI DATI
     // ==========================================
