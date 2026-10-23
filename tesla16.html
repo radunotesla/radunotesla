@@ -192,10 +192,11 @@
     </div>
 
     <div class="form-group">
-      <label for="data-nascita">DATA DI NASCITA:</label>
-<!-- Campo Data di Nascita ottimizzato per Mobile -->
-<input type="text" id="data-nascita" name="data_nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="[0-9]*" required>
-    </div>
+    <label for="data-nascita">DATA DI NASCITA:</label>
+    <!-- Campo Data di Nascita ottimizzato per Mobile -->
+    <!-- AGGIORNATO: Il pattern ora accetta il formato gg/mm/aaaa -->
+    <input type="text" id="data-nascita" name="data-nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/[0-9]{4}" required>
+</div>
 
     <div class="form-group">
       <label for="km_tesla">QUANTI KM HA LA TUA TESLA?</label>
@@ -222,10 +223,12 @@
     </div>
 
     <div class="form-group">
-      <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
-<!-- Campo Data Macchina ottimizzato per Mobile -->
-<input type="text" id="data-macchina" name="data_macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="[0-9]*" required>
-    </div>
+    <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
+    <!-- Campo Data Macchina ottimizzato per Mobile -->
+    <!-- MODIFICATO: Il pattern ora accetta la barra per il formato mese/anno (es. 10/2024) -->
+    <input type="text" id="data-macchina" name="data-macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="[0-9]{2}\/[0-9]{4}" required>
+</div>
+
 
     <button type="submit" class="btn-invia">CONFERMA E INVIA</button>
   </form>
