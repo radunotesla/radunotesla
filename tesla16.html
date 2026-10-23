@@ -354,7 +354,7 @@ document.addEventListener('click', (e) => {
 });
 
     
-      // // BLOCCO 4: MODULO REVISIONE DATI E INVIO EMAIL ---
+      // // BLOCCO 4: INVIO IN BACKGROUND CON FORMSPREE (PER SITI GITHUB PAGES) ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
@@ -375,14 +375,13 @@ if (modulo) {
             data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
             km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
             citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
-            // Legge i km scritti a mano dall'utente nel campo km_CASA
             distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
             modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
             data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
             timestamp: new Date().toLocaleString('it-IT')
         };
 
-        // Genera la visualizzazione stile testo nella pagina
+        // Mostra il riepilogo a schermo prima di inviare
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${datiTemporanei.nome}<br>
             <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
@@ -397,7 +396,6 @@ if (modulo) {
             <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
         `;
 
-        // Mostra la finestrella di conferma scorrendo la pagina verso il basso
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
     });
@@ -407,55 +405,49 @@ if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
         if (!datiTemporanei) return;
 
-        // Salva una copia di backup nel LocalStorage del browser
-        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
-        datiAttuali.push(datiTemporanei);
-        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+        // Disabilita il tasto per evitare doppi clic fastidiosi
+        btnConfermaEmail.innerText = "INVIO IN CORSO...";
+        btnConfermaEmail.disabled = true;
 
-        const emailDestinatario = "radunotesla@gmail.com";
-        const oggettoEmail = `Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`;
+        // INCOLLA IL TUO LINK DI FORMSPREE TRA LE VIRGOLETTE QUI SOTTO:
+        const urlFormspree = "https://formspree.io/f/xqppazba";
 
-        // Scrittura pulita del testo dell'email
-        const testoChiaroEmail = `Dati di registrazione per il Raduno Tesla:
-Nome: ${datiTemporanei.nome}
-Cognome: ${datiTemporanei.cognome}
-Email: ${datiTemporanei.email}
-Targa (3 numeri): ${datiTemporanei.targa}
-Data di Nascita: ${datiTemporanei.data_nascita}
-KM Tesla: ${datiTemporanei.km_tesla}
-Città di provenienza: ${datiTemporanei.citta}
-Distanza stradale: ${datiTemporanei.distanza_raduno}
-Modello Tesla: ${datiTemporanei.modello}
-Mese/Anno immatricolazione: ${datiTemporanei.data_tesla}
-Registrato il: ${datiTemporanei.timestamp}`;
-
-        // Prova ad aprire l'applicazione di posta predefinita (ottimizzato per iOS/Safari)
-        const linkMailto = `mailto:${emailDestinatario}?subject=${encodeURIComponent(oggettoEmail)}&body=${encodeURIComponent(testoChiaroEmail)}`;
-        window.location.assign(linkMailto);
-
-        // Sistema di sicurezza con avviso e copia automatica negli appunti
-        setTimeout(function() {
-            const conferma = confirm(
-                "L'applicazione di posta dovrebbe essersi aperta.\n\n" +
-                "Se NON si è aperta, clicca 'OK' per copiare automaticamente tutti i dati negli appunti. " +
-                "Potrai poi incollarli manualmente nella tua app di posta (Gmail, Hotmail, Mail, ecc.) e inviarli a radunotesla@gmail.com."
-            );
-
-            if (conferma) {
-                const testoDaCopiare = `Invia a: ${emailDestinatario}\nOggetto: ${oggettoEmail}\n\n${testoChiaroEmail}`;
-                
-                navigator.clipboard.writeText(testoDaCopiare).then(function() {
-                    alert("Dati copiati negli appunti! Ora apri la tua app di posta, tieni premuto nello spazio del testo, fai 'Incolla' e invia la mail.");
-                }).catch(function() {
-                    alert("Impossibile copiare in automatico. Puoi comunque selezionare e copiare il testo dal riepilogo a schermo.");
-                });
+        // Spedisce i dati al server invisibilmente
+        fetch(urlFormspree, {
+            method: "POST",
+            body: JSON.stringify(datiTemporanei),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
+        })
+        .then(function(response) {
+            if (response.ok) {
+                // SE TUTTO VA BENE:
+                alert("Iscrizione completata con successo! Abbiamo ricevuto i tuoi dati.");
+                
+                // Salvataggio di scorta locale
+                const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
+                datiAttuali.push(datiTemporanei);
+                localStorage.setItem(KEY, JSON.stringify(datiAttuali));
 
-            // Ripristina il modulo allo stato iniziale
-            boxRiepilogo.style.display = 'none';
-            if (modulo) modulo.reset();
-            if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
-        }, 800);
+                // Resetta la pagina
+                boxRiepilogo.style.display = 'none';
+                if (modulo) modulo.reset();
+                if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
+            } else {
+                alert("C'è stato un problema con l'invio. Riprova tra pochi istanti.");
+            }
+        })
+        .catch(function(error) {
+            alert("Errore di rete. Controlla la tua connessione internet.");
+            console.error(error);
+        })
+        .finally(function() {
+            // Ripristina il bottone originale
+            btnConfermaEmail.innerText = "CONFERMA E INVIA";
+            btnConfermaEmail.disabled = false;
+        });
     });
 }
 
@@ -463,5 +455,6 @@ Registrato il: ${datiTemporanei.timestamp}`;
 </script>
 </body>
 </html>
+
 
 
