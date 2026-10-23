@@ -354,93 +354,97 @@ document.addEventListener('click', (e) => {
 });
 
     
-      // --- BLOCCO 4: MODULO REVISIONE DATI E INVIO EMAIL ---
-  const modulo = document.getElementById('modulo-raduno');
-  const boxRiepilogo = document.getElementById('riepilogo-invio');
-  const testoRiepilogo = document.getElementById('dati-riepilogo');
-  const btnConfermaEmail = document.getElementById('btn-conferma-email');
+      // // BLOCCO 4: MODULO REVISIONE DATI E INVIO EMAIL ---
+const modulo = document.getElementById('modulo-raduno');
+const boxRiepilogo = document.getElementById('riepilogo-invio');
+const testoRiepilogo = document.getElementById('dati-riepilogo');
+const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
-  let datiTemporanei = null;
+let datiTemporanei = null;
 
-  if (modulo) {
+if (modulo) {
     modulo.addEventListener('submit', function(e) {
-      e.preventDefault();
+        e.preventDefault();
 
-      // Raccoglie i dati inseriti nei nuovi campi aggiornati
-      datiTemporanei = {
-        nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
-        cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
-        email: document.getElementById('email') ? document.getElementById('email').value : '',
-        targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
-        data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
-        km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
-        citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
-distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
-        modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
-        data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
-        timestamp: new Date().toLocaleString('it-IT')
-      };
+        // Raccoglie i dati inseriti nei nuovi campi aggiornati
+        datiTemporanei = {
+            nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
+            cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
+            email: document.getElementById('email') ? document.getElementById('email').value : '',
+            targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
+            data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
+            km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
+            citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
+            // AGGIORNATO: Legge i km scritti a mano dall'utente nel campo km_CASA
+            distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
+            modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
+            data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
+            timestamp: new Date().toLocaleString('it-IT')
+        };
 
-      // Genera la visualizzazione stile testo PDF nella pagina
-      testoRiepilogo.innerHTML = `
-        <b>NOME:</b> ${datiTemporanei.nome}<br>
-        <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
-        <b>EMAIL:</b> ${datiTemporanei.email}<br>
-        <b>TRE NUMERI TARGA:</b> ${datiTemporanei.targa}<br>
-        <b>DATA DI NASCITA:</b> ${datiTemporanei.data_nascita}<br>
-        <b>KM ATTUALI VETTURA:</b> ${datiTemporanei.km_tesla}<br>
-        <b>CITTA DI PROVENIENZA:</b> ${datiTemporanei.citta}<br>
-        <b>DISTANZA STRADALE CALCOLATA:</b> ${datiTemporanei.distanza_raduno}<br>
-        <b>MODELLO TESLA:</b> ${datiTemporanei.modello}<br>
-        <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${datiTemporanei.data_tesla}<br>
-        <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
-      `;
+        // Genera la visualizzazione stile testo PDF nella pagina
+        testoRiepilogo.innerHTML = `
+            <b>NOME:</b> ${datiTemporanei.nome}<br>
+            <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
+            <b>EMAIL:</b> ${datiTemporanei.email}<br>
+            <b>TRE NUMERI TARGA:</b> ${datiTemporanei.targa}<br>
+            <b>DATA DI NASCITA:</b> ${datiTemporanei.data_nascita}<br>
+            <b>KM ATTUALI VETTURA:</b> ${datiTemporanei.km_tesla}<br>
+            <b>CITTA DI PROVENIENZA:</b> ${datiTemporanei.citta}<br>
+            <b>DISTANZA STRADALE:</b> ${datiTemporanei.distanza_raduno}<br>
+            <b>MODELLO TESLA:</b> ${datiTemporanei.modello}<br>
+            <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${datiTemporanei.data_tesla}<br>
+            <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
+        `;
 
-      // Mostra la finestrella di conferma scorrendo la pagina verso il basso
-      boxRiepilogo.style.display = 'block';
-      boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
+        // Mostra la finestrella di conferma scorrendo la pagina verso il basso
+        boxRiepilogo.style.display = 'block';
+        boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
     });
-  }
+}
 
-  if (btnConfermaEmail) {
+if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
-      if (!datiTemporanei) return;
+        if (!datiTemporanei) return;
 
-      // Salva una copia di backup anche nel LocalStorage del browser
-      const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
-      datiAttuali.push(datiTemporanei);
-      localStorage.setItem(KEY, JSON.stringify(datiAttuali));
+        // Salva una copia di backup anche nel LocalStorage del browser
+        const datiAttuali = JSON.parse(localStorage.getItem(KEY) || '[]');
+        datiAttuali.push(datiTemporanei);
+        localStorage.setItem(KEY, JSON.stringify(datiAttuali));
 
-      // Prepara il corpo del testo per l'email finale a radunotesla@gmail.com
-      const emailDestinatario = "radunotesla@gmail.com";
-      const oggettoEmail = encodeURIComponent(`Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`);
-      
-      const corpoEmail = encodeURIComponent(
-        `Dati di registrazione per il Raduno Tesla:\n\n` +
-        `Nome: ${datiTemporanei.nome}\n` +
-        `Cognome: ${datiTemporanei.cognome}\n` +
-        `Email: ${datiTemporanei.email}\n` +
-        `Targa (3 numeri): ${datiTemporanei.targa}\n` +
-        `Data di Nascita: ${datiTemporanei.data_nascita}\n` +
-        `KM Tesla: ${datiTemporanei.km_tesla}\n` +
-        `Città di provenienza: ${datiTemporanei.citta}\n` +
-        `Distanza stradale: ${datiTemporanei.distanza_raduno}\n` +
-        `Modello Tesla: ${datiTemporanei.modello}\n` +
-        `Mese/Anno immatricolazione: ${datiTemporanei.data_tesla}\n` +
-        `Registrato il: ${datiTemporanei.timestamp}`
-      );
+        // Prepara il corpo del testo per l'email finale a radunotesla@gmail.com
+        const emailDestinatario = "radunotesla@gmail.com";
+        const oggettoEmail = encodeURIComponent(`Iscrizione Raduno Tesla - ${datiTemporanei.cognome} ${datiTemporanei.nome}`);
 
-      // Apre l'applicazione di posta elettronica dell'utente pre-compilata
-      window.location.href = `mailto:${emailDestinatario}?subject=${oggettoEmail}&body=${corpoEmail}`;
+        // Scrittura pulita e moderna del testo dell'email
+        const testoChiaroEmail = `Dati di registrazione per il Raduno Tesla:
+Nome: ${datiTemporanei.nome}
+Cognome: ${datiTemporanei.cognome}
+Email: ${datiTemporanei.email}
+Targa (3 numeri): ${datiTemporanei.targa}
+Data di Nascita: ${datiTemporanei.data_nascita}
+KM Tesla: ${datiTemporanei.km_tesla}
+Città di provenienza: ${datiTemporanei.citta}
+Distanza stradale: ${datiTemporanei.distanza_raduno}
+Modello Tesla: ${datiTemporanei.modello}
+Mese/Anno immatricolazione: ${datiTemporanei.data_tesla}
+Registrato il: ${datiTemporanei.timestamp}`;
 
-      alert("Conferma salvata! L'applicazione di posta si aprirà ora per inviare i dati a radunotesla@gmail.com.");
-      
-      // Ripristina il modulo allo stato iniziale
-      boxRiepilogo.style.display = 'none';
-      if (modulo) modulo.reset();
-if (document.getElementById('distanza')) document.getElementById('distanza').value = "";
+        const corpoEmail = encodeURIComponent(testoChiaroEmail);
+
+        // Apre l'applicazione di posta elettronica dell'utente pre-compilata
+        window.location.href = `mailto:${emailDestinatario}?subject=${oggettoEmail}&body=${corpoEmail}`;
+
+        alert("Conferma salvata! L'applicazione di posta si aprirà ora per inviare i dati a radunotesla@gmail.com.");
+
+        // Ripristina il modulo allo stato iniziale
+        boxRiepilogo.style.display = 'none';
+        if (modulo) modulo.reset();
+
+                // AGGIORNATO: Svuota il campo dei km scritti a mano al posto del vecchio 'distanza'
+        if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
     });
-  }
+}
 
 }); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
 </script>
