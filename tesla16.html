@@ -175,7 +175,7 @@
 </div>
 <div data-fs-error style="display: none; padding: 15px; margin-bottom: 20px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; font-weight: bold;"></div>
 
-<form id="modulo-raduno">
+<form id="modulo-raduno" action="https://formspree.io" method="POST">
 
 <div class="form-group">
     <label for="nome">NOME:</label>
@@ -370,104 +370,47 @@ document.addEventListener('click', (e) => {
 });
 
     
-// // BLOCCO 4: REGISTRAZIONE FINALE FORMSPREE SENZA POPUP ---
+// // BLOCCO 4: REGISTRAZIONE FINALE FORMSPREE CON INVIO NATIVO HTML ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
 const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
-// CORREZIONE 1: Spostiamo la variabile fuori per renderla leggibile da entrambi i bottoni
-let datiTemporanei = null;
-
 if (modulo) {
     modulo.addEventListener('submit', function(e) {
+        // Blocchiamo il primo invio automatico per mostrare la finestra di controllo visivo
         e.preventDefault();
 
-        // Raccoglie i dati inseriti nei campi (Uguale al tuo tranne per "let")
-        datiTemporanei = {
-            nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
-            cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
-            email: document.getElementById('email') ? document.getElementById('email').value : '',
-            targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
-            data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
-            km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
-            citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
-            distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
-            modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
-            data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
-            timestamp: new Date().toLocaleString('it-IT')
-        };
-
-        // Genera la visualizzazione del riepilogo a schermo (Esattamente identico al tuo)
+        // Genera la visualizzazione del riepilogo a schermo leggendo i campi attuali
         testoRiepilogo.innerHTML = `
-            <b>NOME:</b> ${datiTemporanei.nome}<br>
-            <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
-            <b>EMAIL:</b> ${datiTemporanei.email}<br>
-            <b>TRE NUMERI TARGA:</b> ${datiTemporanei.targa}<br>
-            <b>DATA DI NASCITA:</b> ${datiTemporanei.data_nascita}<br>
-            <b>KM ATTUALI VETTURA:</b> ${datiTemporanei.km_tesla}<br>
-            <b>CITTA DI PROVENIENZA:</b> ${datiTemporanei.citta}<br>
-            <b>DISTANZA STRADALE:</b> ${datiTemporanei.distanza_raduno}<br>
-            <b>MODELLO TESLA:</b> ${datiTemporanei.modello}<br>
-            <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${datiTemporanei.data_tesla}<br>
-            <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
+            <b>NOME:</b> ${document.getElementById('nome') ? document.getElementById('nome').value : ''}<br>
+            <b>COGNOME:</b> ${document.getElementById('cognome') ? document.getElementById('cognome').value : ''}<br>
+            <b>EMAIL:</b> ${document.getElementById('email') ? document.getElementById('email').value : ''}<br>
+            <b>TRE NUMERI TARGA:</b> ${document.getElementById('targa') ? document.getElementById('targa').value : ''}<br>
+            <b>DATA DI NASCITA:</b> ${document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : ''}<br>
+            <b>KM ATTUALI VETTURA:</b> ${document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : ''}<br>
+            <b>CITTA DI PROVENIENZA:</b> ${document.getElementById('citta') ? document.getElementById('citta').value : ''}<br>
+            <b>DISTANZA STRADALE:</b> ${document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : ''}<br>
+            <b>MODELLO TESLA:</b> ${document.getElementById('modello') ? document.getElementById('modello').value : ''}<br>
+            <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : ''}
         `;
 
+        // Mostra la finestra di controllo scorrendo la pagina verso il basso
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
-// SECONDA PARTE DEL TUO CODICE (CORRETTA PER CONCLUDERE L'INVIO):
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
-        if (!datiTemporanei) return;
+        if (modulo) {
+            // Feedback visivo immediato sul tasto verde
+            btnConfermaEmail.innerText = "INVIO IN CORSO...";
+            btnConfermaEmail.disabled = true;
 
-        // Effetto caricamento sul bottone verde
-        btnConfermaEmail.innerText = "INVIO IN CORSO...";
-        btnConfermaEmail.disabled = true;
-
-        const urlFormspree = "https://formspree.io";
-
-        // CORREZIONE 2: Risolve l'errore di rete su iPhone trasmettendo come un form classico
-        const pacchettoMeteo = new FormData();
-        Object.keys(datiTemporanei).forEach(chiave => {
-            pacchettoMeteo.append(chiave, datiTemporanei[chiave]);
-        });
-
-        fetch(urlFormspree, {
-            method: "POST",
-            body: pacchettoMeteo,
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
-        .then(function(response) {
-            if (response.ok) {
-                // Svuota e resetta la schermata
-                boxRiepilogo.style.display = 'none';
-                if (modulo) modulo.reset();
-                if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
-
-                // Attiva il riquadro verde di ringraziamento in alto alla pagina
-                const bannerSuccesso = document.querySelector('[data-fs-success]');
-                if (bannerSuccesso) {
-                    bannerSuccesso.style.display = 'block';
-                    bannerSuccesso.scrollIntoView({ behavior: 'smooth' });
-                }
-            } else {
-                alert("C'è stato un problema con il server di Formspree. Riprova.");
-            }
-        })
-        .catch(function(error) {
-            alert("Errore di rete. Controlla la connessione.");
-            console.error(error);
-        })
-        .finally(function() {
-            // Ripristina il testo del bottone
-            btnConfermaEmail.innerText = "CONFERMA E INVIA DEFINITIVAMENTE";
-            btnConfermaEmail.disabled = false;
-        });
+            // Avvia l'invio nativo HTML sfruttando l'action="https://formspree.io" che abbiamo appena aggiunto
+            modulo.submit();
+        }
     });
 }
 
