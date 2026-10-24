@@ -427,8 +427,12 @@ formspree('initForm', {
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
         if (modulo) {
-            // Esegue direttamente l'invio in background senza pop-up intermedi
-            modulo.dispatchEvent(new Event('submit', { cancelable: true }));
+            // Cambiamo la scritta del bottone per dare un feedback visivo immediato
+            btnConfermaEmail.innerText = "INVIO IN CORSO...";
+            btnConfermaEmail.disabled = true;
+
+            // IL PEZZETTINO MANCANTE: Invia il modulo bypassando il blocco dell'evento submit
+            HTMLFormElement.prototype.submit.call(modulo);
         }
     });
 }
@@ -440,4 +444,5 @@ if (btnConfermaEmail) {
 <script src="https://unpkg.com" defer></script>
 </body>
 </html>
+
 
