@@ -370,20 +370,18 @@ document.addEventListener('click', (e) => {
 });
 
     
-// // BLOCCO 4: INTEGRAZIONE AVANZATA SDK AJAX FORMSPREE ---
+// // BLOCCO 4: INTEGRAZIONE FINALE SNELLA FORMSPREE (SENZA POPUP) ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
 const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
-let datiTemporanei = null;
-
 if (modulo) {
-    // Intercettiamo il primo clic su "Verifica Dati"
+    // 1. Intercettiamo il primo clic su "VERIFICA DATI REGISTRAZIONE"
     modulo.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Genera il riepilogo leggendo i campi a schermo
+        // Genera la visualizzazione del riepilogo leggendo i campi a schermo
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${document.getElementById('nome') ? document.getElementById('nome').value : ''}<br>
             <b>COGNOME:</b> ${document.getElementById('cognome') ? document.getElementById('cognome').value : ''}<br>
@@ -397,39 +395,39 @@ if (modulo) {
             <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : ''}
         `;
 
-        // Mostra il riepilogo grafico
+        // Mostra la finestra di controllo
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
-// Inizializzazione ufficiale della libreria Formspree Ajax tramite CDN
+// Inizializzazione della libreria Formspree Ajax tramite CDN
 window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
 
 formspree('initForm', {
     formElement: '#modulo-raduno',
     formId: 'xqppazba',
-    // Usiamo il ciclo di vita nativo per gestire le grafiche al successo dell'invio
+    // Quando l'invio ha successo, puliamo la pagina e attiviamo il riquadro verde in alto
     onSuccess: function(context, result) {
-        // Mostriamo l'alert richiesto
-        alert("Grazie per l'invio del modulo di Registrazione!");
-        
-        // Nascondiamo il riepilogo e resettiamo il modulo HTML
+        // Nascondiamo il riepilogo e resettiamo tutto il form HTML
         boxRiepilogo.style.display = 'none';
         if (modulo) modulo.reset();
         if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
         
-        // Forza la visualizzazione del banner verde di successo HTML
+        // Forza la comparsa del riquadro verde di ringraziamento in alto alla pagina
         const bannerSuccesso = document.querySelector('[data-fs-success]');
-        if (bannerSuccesso) bannerSuccesso.style.display = 'block';
+        if (bannerSuccesso) {
+            bannerSuccesso.style.display = 'block';
+            bannerSuccesso.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 });
 
-// Quando l'utente clicca sul pulsante verde finale del riepilogo, scatena l'invio Ajax
+// 2. Quando l'utente clicca su "CONFERMA E INVIA DEFINITIVAMENTE" in verde
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
         if (modulo) {
-            // Attiva l'evento submit programmato tracciato dall'SDK Formspree
+            // Esegue direttamente l'invio in background senza pop-up intermedi
             modulo.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
@@ -439,7 +437,7 @@ if (btnConfermaEmail) {
 </script>
 
 <!-- Caricamento asincrono della libreria CDN di Formspree in fondo alla pagina -->
-<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
+<script src="https://unpkg.com" defer></script>
 </body>
 </html>
 
