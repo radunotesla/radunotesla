@@ -370,79 +370,113 @@ document.addEventListener('click', (e) => {
 });
 
     
-// // BLOCCO 4: INTEGRAZIONE FINALE SNELLA FORMSPREE (SENZA POPUP) ---
+// // BLOCCO 4: REGISTRAZIONE FINALE FORMSPREE SENZA POPUP ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
 const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
 if (modulo) {
-    // 1. Intercettiamo il primo clic su "VERIFICA DATI REGISTRAZIONE"
     modulo.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Genera la visualizzazione del riepilogo leggendo i campi a schermo
+        // Raccoglie i dati inseriti nei campi
+        const datiTemporanei = {
+            nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
+            cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
+            email: document.getElementById('email') ? document.getElementById('email').value : '',
+            targa: document.getElementById('targa') ? document.getElementById('targa').value : '',
+            data_nascita: document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : '',
+            km_tesla: document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : '',
+            citta: document.getElementById('citta') ? document.getElementById('citta').value : '',
+            distanza_raduno: document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : '',
+            modello: document.getElementById('modello') ? document.getElementById('modello').value : '',
+            data_tesla: document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : '',
+            timestamp: new Date().toLocaleString('it-IT')
+        };
+
+        // Genera la visualizzazione del riepilogo a schermo
         testoRiepilogo.innerHTML = `
-            <b>NOME:</b> ${document.getElementById('nome') ? document.getElementById('nome').value : ''}<br>
-            <b>COGNOME:</b> ${document.getElementById('cognome') ? document.getElementById('cognome').value : ''}<br>
-            <b>EMAIL:</b> ${document.getElementById('email') ? document.getElementById('email').value : ''}<br>
-            <b>TRE NUMERI TARGA:</b> ${document.getElementById('targa') ? document.getElementById('targa').value : ''}<br>
-            <b>DATA DI NASCITA:</b> ${document.getElementById('data-nascita') ? document.getElementById('data-nascita').value : ''}<br>
-            <b>KM ATTUALI VETTURA:</b> ${document.getElementById('km_tesla') ? document.getElementById('km_tesla').value : ''}<br>
-            <b>CITTA DI PROVENIENZA:</b> ${document.getElementById('citta') ? document.getElementById('citta').value : ''}<br>
-            <b>DISTANZA STRADALE:</b> ${document.getElementById('km_CASA') ? document.getElementById('km_CASA').value : ''}<br>
-            <b>MODELLO TESLA:</b> ${document.getElementById('modello') ? document.getElementById('modello').value : ''}<br>
-            <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : ''}
+            <b>NOME:</b> ${datiTemporanei.nome}<br>
+            <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
+            <b>EMAIL:</b> ${datiTemporanei.email}<br>
+            <b>TRE NUMERI TARGA:</b> ${datiTemporanei.targa}<br>
+            <b>DATA DI NASCITA:</b> ${datiTemporanei.data_nascita}<br>
+            <b>KM ATTUALI VETTURA:</b> ${datiTemporanei.km_tesla}<br>
+            <b>CITTA DI PROVENIENZA:</b> ${datiTemporanei.citta}<br>
+            <b>DISTANZA STRADALE:</b> ${datiTemporanei.distanza_raduno}<br>
+            <b>MODELLO TESLA:</b> ${datiTemporanei.modello}<br>
+            <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${datiTemporanei.data_tesla}<br>
+            <b>DATA REGISTRAZIONE:</b> ${datiTemporanei.timestamp}
         `;
 
-        // Mostra la finestra di controllo
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
+        
+        // Salviamo i dati temporaneamente per usarli al clic sul tasto verde
+        modulo.dataset.datiPronti = JSON.stringify(datiTemporanei);
     });
 }
 
-// Inizializzazione della libreria Formspree Ajax tramite CDN
-window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
-
-formspree('initForm', {
-    formElement: '#modulo-raduno',
-    formId: 'xqppazba',
-    // Quando l'invio ha successo, puliamo la pagina e attiviamo il riquadro verde in alto
-    onSuccess: function(context, result) {
-        // Nascondiamo il riepilogo e resettiamo tutto il form HTML
-        boxRiepilogo.style.display = 'none';
-        if (modulo) modulo.reset();
-        if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
-        
-        // Forza la comparsa del riquadro verde di ringraziamento in alto alla pagina
-        const bannerSuccesso = document.querySelector('[data-fs-success]');
-        if (bannerSuccesso) {
-            bannerSuccesso.style.display = 'block';
-            bannerSuccesso.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-});
-
-// 2. Quando l'utente clicca su "CONFERMA E INVIA DEFINITIVAMENTE" in verde
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
-        if (modulo) {
-            // Cambiamo la scritta del bottone per dare un feedback visivo immediato
-            btnConfermaEmail.innerText = "INVIO IN CORSO...";
-            btnConfermaEmail.disabled = true;
+        // Recuperiamo i dati salvati
+        if (!modulo.dataset.datiPronti) return;
+        const datiInviare = JSON.parse(modulo.dataset.datiPronti);
 
-            // IL PEZZETTINO MANCANTE: Invia il modulo bypassando il blocco dell'evento submit
-            HTMLFormElement.prototype.submit.call(modulo);
-        }
+        // Effetto caricamento sul bottone verde
+        btnConfermaEmail.innerText = "INVIO IN CORSO...";
+        btnConfermaEmail.disabled = true;
+
+        const urlFormspree = "https://formspree.io";
+
+        // Trasformiamo i dati nel formato modulo standard che accettava ieri
+        const datiFormattati = new URLSearchParams();
+        Object.keys(datiInviare).forEach(key => {
+            datiFormattati.append(key, datiInviare[key]);
+        });
+
+        // Spedisce i dati al server in background
+        fetch(urlFormspree, {
+            method: "POST",
+            body: datiFormattati.toString(),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(response) {
+            if (response.ok) {
+                // Svuota e resetta la schermata (Nessun alert popup!)
+                boxRiepilogo.style.display = 'none';
+                if (modulo) modulo.reset();
+                if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
+                delete modulo.dataset.datiPronti;
+
+                // Forza la comparsa del riquadro verde di successo in alto alla pagina
+                const bannerSuccesso = document.querySelector('[data-fs-success]');
+                if (bannerSuccesso) {
+                    bannerSuccesso.style.display = 'block';
+                    bannerSuccesso.scrollIntoView({ behavior: 'smooth' });
+                }
+            } else {
+                alert("C'è stato un problema con il server. Riprova.");
+            }
+        })
+        .catch(function(error) {
+            alert("Errore di rete. Controlla la connessione.");
+            console.error(error);
+        })
+        .finally(function() {
+            // Ripristina il testo del bottone
+            btnConfermaEmail.innerText = "CONFERMA E INVIA DEFINITIVAMENTE";
+            btnConfermaEmail.disabled = false;
+        });
     });
 }
 
 }); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
 </script>
-
-<!-- Caricamento asincrono della libreria CDN di Formspree in fondo alla pagina -->
-<script src="https://unpkg.com" defer></script>
 </body>
 </html>
-
 
