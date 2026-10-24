@@ -169,72 +169,83 @@
 
   <div class="sezione-titolo">Modulo di Registrazione</div>
 
-<form id="modulo-raduno" action="https://formspree.io/f/xqppazba" method="POST">
+<!-- Box per i messaggi di stato di Formspree -->
+<div data-fs-success style="display: none; padding: 15px; margin-bottom: 20px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; font-weight: bold;">
+    Grazie per l'invio del modulo di Registrazione!
+</div>
+<div data-fs-error style="display: none; padding: 15px; margin-bottom: 20px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; font-weight: bold;"></div>
+
+<form id="modulo-raduno">
 
 <div class="form-group">
     <label for="nome">NOME:</label>
-    <input type="text" id="nome" name="nome" placeholder="Inserisci il tuo nome" required>
+    <input type="text" id="nome" name="nome" placeholder="Inserisci il tuo nome" data-fs-field required>
+    <span data-fs-error="nome" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="cognome">COGNOME:</label>
-    <input type="text" id="cognome" name="cognome" placeholder="Inserisci il tuo cognome" required>
+    <input type="text" id="cognome" name="cognome" placeholder="Inserisci il tuo cognome" data-fs-field required>
+    <span data-fs-error="cognome" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="email">MAIL (Obbligatoria con carattere @):</label>
-    <input type="email" id="email" name="email" placeholder="esempio@email.com" required>
+    <input type="email" id="email" name="email" placeholder="esempio@email.com" data-fs-field required>
+    <span data-fs-error="email" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="targa">TARGA - SOLO I TRE NUMERI CENTRALI:</label>
-    <input type="text" id="targa" name="targa" placeholder="123" minlength="3" maxlength="3" pattern="\d{3}" required title="Inserisci esattamente 3 numeri da 000 a 999">
+    <input type="text" id="targa" name="targa" placeholder="123" minlength="3" maxlength="3" required>
 </div>
 
 <div class="form-group">
     <label for="data-nascita">DATA DI NASCITA:</label>
-    <input type="text" id="data-nascita" name="data-nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="(0[1-9]|[0-9]|3)\/(0[1-9]|1[0-2])\/[0-9]{4}" required>
+    <!-- Il pattern consente l'inserimento delle barre / tra i numeri -->
+    <input type="text" id="data-nascita" name="data-nascita" placeholder="gg/mm/aaaa" maxlength="10" inputmode="numeric" pattern="[0-9]{2}\/[0-9]{2}\/[0-9]{4}" required>
 </div>
 
 <div class="form-group">
     <label for="km_tesla">QUANTI KM HA LA TUA TESLA?</label>
-    <input type="number" id="km_tesla" name="km_tesla" placeholder="Es. 45000" min="0" required>
+    <input type="number" id="km_tesla" name="km_tesla" placeholder="Es. 45000" min="0" data-fs-field required>
+    <span data-fs-error="km_tesla" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="citta">CITTA' DI PROVENIENZA (SOLO CITTA', NON INDIRIZZO):</label>
-    <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la città..." autocomplete="off" required>
+    <input type="text" id="citta" name="citta" placeholder="Inizia a digitare la città..." autocomplete="off" data-fs-field required>
     <ul id="suggerimenti-citta" class="suggestions-list"></ul>
-    
-    <input type="hidden" id="cittaLat">
-    <input type="hidden" id="cittaLon">
+    <span data-fs-error="citta" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="km_CASA">QUANTI KM HAI FATTO PER VENIRE QUI DALLA TUA CITTA' ?</label>
-    <input type="number" id="km_CASA" name="km_CASA" placeholder="Es. 45000" min="0" required>
+    <input type="number" id="km_CASA" name="km_CASA" placeholder="Es. 45000" min="0" data-fs-field required>
+    <span data-fs-error="km_CASA" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="modello">INDICA IL MODELLO DELLA TUA TESLA:</label>
-    <input type="text" id="modello" name="modello" placeholder="Es. Model 3 Long Range" required>
+    <input type="text" id="modello" name="modello" placeholder="Es. Model 3 Long Range" data-fs-field required>
+    <span data-fs-error="modello" style="color: #dc3545; font-size: 12px;"></span>
 </div>
 
 <div class="form-group">
     <label for="data-macchina">INDICA MESE E ANNO DELLA TUA TESLA:</label>
-    <input type="text" id="data-macchina" name="data-macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" required>
+    <!-- Il pattern consente l'inserimento della singola barra / per il mese/anno -->
+    <input type="text" id="data-macchina" name="data-macchina" placeholder="mm/aaaa" maxlength="7" inputmode="numeric" pattern="[0-9]{2}\/[0-9]{4}" required>
 </div>
 
-<!-- == BOTTONE PRINCIPALE DEL MODULO == -->
+<!-- Tasto per attivare il riepilogo grafico intermedio -->
 <button type="submit" class="btn-invia" style="margin-top: 20px; width: 100%; padding: 12px; font-weight: bold;">VERIFICA DATI REGISTRAZIONE</button>
 
-<!-- == SCHERMATA DI RIEPILOGO DATI E CONFERMA FINALE == -->
+<!-- Box di riepilogo dati e pulsante di invio definitivo -->
 <div id="riepilogo-invio" style="display: none; margin-top: 30px; padding: 20px; border: 2px dashed #333; background: #f9f9f9;">
     <h3>CONTROLLA I TUOI DATI PRIMA DI INVIARE:</h3>
     <div id="dati-riepilogo" style="margin-bottom: 20px; line-height: 1.6;"></div>
     
-    <!-- Questo è il bottone finale che attiva l'invio a Formspree ed esegue l'alert di ringraziamento -->
-    <button type="button" id="btn-conferma-email" style="width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer;">CONFERMA E INVIA DEFINITIVAMENTE</button>
+    <button type="button" id="btn-conferma-email" data-fs-submit-btn style="width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer;">CONFERMA E INVIA DEFINITIVAMENTE</button>
 </div>
 
 </form>
@@ -359,18 +370,20 @@ document.addEventListener('click', (e) => {
 });
 
     
-// // BLOCCO 4: REVISIONE DATI E INVIO DIRETTO CON FORMSPREE ---
+// // BLOCCO 4: INTEGRAZIONE AVANZATA SDK AJAX FORMSPREE ---
 const modulo = document.getElementById('modulo-raduno');
 const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
 const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
+let datiTemporanei = null;
+
 if (modulo) {
+    // Intercettiamo il primo clic su "Verifica Dati"
     modulo.addEventListener('submit', function(e) {
-        // 1. Fermiamo un attimo l'invio automatico per mostrare la finestra di controllo
         e.preventDefault();
 
-        // 2. Genera la visualizzazione del riepilogo leggendo i campi a schermo
+        // Genera il riepilogo leggendo i campi a schermo
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${document.getElementById('nome') ? document.getElementById('nome').value : ''}<br>
             <b>COGNOME:</b> ${document.getElementById('cognome') ? document.getElementById('cognome').value : ''}<br>
@@ -384,26 +397,49 @@ if (modulo) {
             <b>ANNO/MESE IMMATRICOLAZIONE:</b> ${document.getElementById('data-macchina') ? document.getElementById('data-macchina').value : ''}
         `;
 
-        // 3. Mostra la finestra di riepilogo
+        // Mostra il riepilogo grafico
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
+// Inizializzazione ufficiale della libreria Formspree Ajax tramite CDN
+window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+
+formspree('initForm', {
+    formElement: '#modulo-raduno',
+    formId: 'xqppazba',
+    // Usiamo il ciclo di vita nativo per gestire le grafiche al successo dell'invio
+    onSuccess: function(context, result) {
+        // Mostriamo l'alert richiesto
+        alert("Grazie per l'invio del modulo di Registrazione!");
+        
+        // Nascondiamo il riepilogo e resettiamo il modulo HTML
+        boxRiepilogo.style.display = 'none';
+        if (modulo) modulo.reset();
+        if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
+        
+        // Forza la visualizzazione del banner verde di successo HTML
+        const bannerSuccesso = document.querySelector('[data-fs-success]');
+        if (bannerSuccesso) bannerSuccesso.style.display = 'block';
+    }
+});
+
+// Quando l'utente clicca sul pulsante verde finale del riepilogo, scatena l'invio Ajax
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
-        // 4. L'utente ha ricontrollato e clicca il tasto finale: mostriamo il messaggio di ringraziamento
-        alert("Grazie per l'invio del modulo di Registrazione!");
-
-        // 5. Facciamo partire l'invio HTML reale verso il server di Formspree
         if (modulo) {
-            modulo.submit(); 
+            // Attiva l'evento submit programmato tracciato dall'SDK Formspree
+            modulo.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
 }
 
-}); // Chiusura finale del tag DOMContentLoaded
+}); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
 </script>
+
+<!-- Caricamento asincrono della libreria CDN di Formspree in fondo alla pagina -->
+<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 </body>
 </html>
 
