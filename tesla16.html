@@ -376,12 +376,15 @@ const boxRiepilogo = document.getElementById('riepilogo-invio');
 const testoRiepilogo = document.getElementById('dati-riepilogo');
 const btnConfermaEmail = document.getElementById('btn-conferma-email');
 
+// CORREZIONE 1: Spostiamo la variabile fuori per renderla leggibile da entrambi i bottoni
+let datiTemporanei = null;
+
 if (modulo) {
     modulo.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Raccoglie i dati inseriti nei campi
-        const datiTemporanei = {
+        // Raccoglie i dati inseriti nei campi (Uguale al tuo tranne per "let")
+        datiTemporanei = {
             nome: document.getElementById('nome') ? document.getElementById('nome').value : '',
             cognome: document.getElementById('cognome') ? document.getElementById('cognome').value : '',
             email: document.getElementById('email') ? document.getElementById('email').value : '',
@@ -395,7 +398,7 @@ if (modulo) {
             timestamp: new Date().toLocaleString('it-IT')
         };
 
-        // Genera la visualizzazione del riepilogo a schermo
+        // Genera la visualizzazione del riepilogo a schermo (Esattamente identico al tuo)
         testoRiepilogo.innerHTML = `
             <b>NOME:</b> ${datiTemporanei.nome}<br>
             <b>COGNOME:</b> ${datiTemporanei.cognome}<br>
@@ -412,17 +415,13 @@ if (modulo) {
 
         boxRiepilogo.style.display = 'block';
         boxRiepilogo.scrollIntoView({ behavior: 'smooth' });
-        
-        // Salviamo i dati temporaneamente per usarli al clic sul tasto verde
-        modulo.dataset.datiPronti = JSON.stringify(datiTemporanei);
     });
 }
 
+// SECONDA PARTE DEL TUO CODICE (CORRETTA PER CONCLUDERE L'INVIO):
 if (btnConfermaEmail) {
     btnConfermaEmail.addEventListener('click', function() {
-        // Recuperiamo i dati salvati
-        if (!modulo.dataset.datiPronti) return;
-        const datiInviare = JSON.parse(modulo.dataset.datiPronti);
+        if (!datiTemporanei) return;
 
         // Effetto caricamento sul bottone verde
         btnConfermaEmail.innerText = "INVIO IN CORSO...";
@@ -430,20 +429,17 @@ if (btnConfermaEmail) {
 
         const urlFormspree = "https://formspree.io";
 
-        // CORREZIONE DI SICUREZZA PER SAFARI/CHROME ED EVITARE L'ERRORE DI RETE:
-        // Usiamo l'oggetto FormData nativo, accettato da tutti i browser senza blocchi CORS
-        const datiFormattati = new FormData();
-        Object.keys(datiInviare).forEach(key => {
-            datiFormattati.append(key, datiInviare[key]);
+        // CORREZIONE 2: Risolve l'errore di rete su iPhone trasmettendo come un form classico
+        const pacchettoMeteo = new FormData();
+        Object.keys(datiTemporanei).forEach(chiave => {
+            pacchettoMeteo.append(chiave, datiTemporanei[chiave]);
         });
 
-        // Spedisce i dati al server in background usando la configurazione standard dei moduli
         fetch(urlFormspree, {
             method: "POST",
-            body: datiFormattati,
+            body: pacchettoMeteo,
             headers: {
                 'Accept': 'application/json'
-                // NOTA: Con FormData NON dobbiamo mettere il Content-Type, lo decide il browser da solo
             }
         })
         .then(function(response) {
@@ -452,16 +448,15 @@ if (btnConfermaEmail) {
                 boxRiepilogo.style.display = 'none';
                 if (modulo) modulo.reset();
                 if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
-                delete modulo.dataset.datiPronti;
 
-                // Forza la comparsa del riquadro verde di successo in alto alla pagina
+                // Attiva il riquadro verde di ringraziamento in alto alla pagina
                 const bannerSuccesso = document.querySelector('[data-fs-success]');
                 if (bannerSuccesso) {
                     bannerSuccesso.style.display = 'block';
                     bannerSuccesso.scrollIntoView({ behavior: 'smooth' });
                 }
             } else {
-                alert("C'è stato un problema con il server. Riprova.");
+                alert("C'è stato un problema con il server di Formspree. Riprova.");
             }
         })
         .catch(function(error) {
@@ -469,10 +464,15 @@ if (btnConfermaEmail) {
             console.error(error);
         })
         .finally(function() {
-            // Ripristina il testo del bottone se fallisce
+            // Ripristina il testo del bottone
             btnConfermaEmail.innerText = "CONFERMA E INVIA DEFINITIVAMENTE";
             btnConfermaEmail.disabled = false;
         });
     });
 }
+
+}); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
+</script>
+</body>
+</html>
 
