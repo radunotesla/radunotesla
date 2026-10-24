@@ -430,24 +430,25 @@ if (btnConfermaEmail) {
 
         const urlFormspree = "https://formspree.io";
 
-        // Trasformiamo i dati nel formato modulo standard che accettava ieri
-        const datiFormattati = new URLSearchParams();
+        // CORREZIONE DI SICUREZZA PER SAFARI/CHROME ED EVITARE L'ERRORE DI RETE:
+        // Usiamo l'oggetto FormData nativo, accettato da tutti i browser senza blocchi CORS
+        const datiFormattati = new FormData();
         Object.keys(datiInviare).forEach(key => {
             datiFormattati.append(key, datiInviare[key]);
         });
 
-        // Spedisce i dati al server in background
+        // Spedisce i dati al server in background usando la configurazione standard dei moduli
         fetch(urlFormspree, {
             method: "POST",
-            body: datiFormattati.toString(),
+            body: datiFormattati,
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json'
+                // NOTA: Con FormData NON dobbiamo mettere il Content-Type, lo decide il browser da solo
             }
         })
         .then(function(response) {
             if (response.ok) {
-                // Svuota e resetta la schermata (Nessun alert popup!)
+                // Svuota e resetta la schermata
                 boxRiepilogo.style.display = 'none';
                 if (modulo) modulo.reset();
                 if (document.getElementById('km_CASA')) document.getElementById('km_CASA').value = "";
@@ -468,15 +469,10 @@ if (btnConfermaEmail) {
             console.error(error);
         })
         .finally(function() {
-            // Ripristina il testo del bottone
+            // Ripristina il testo del bottone se fallisce
             btnConfermaEmail.innerText = "CONFERMA E INVIA DEFINITIVAMENTE";
             btnConfermaEmail.disabled = false;
         });
     });
 }
-
-}); // Chiusura finale del tag DOMContentLoaded (Mantenere tassativamente!)
-</script>
-</body>
-</html>
 
